@@ -30,8 +30,8 @@ export default function Header({ initials }: HeaderProps) {
           <span className="material-symbols-outlined">notifications</span>
         </button>
         <a
-          href="/admin"
-          aria-label="Admin"
+          href="/settings"
+          aria-label="Settings"
           className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors"
         >
           <span className="material-symbols-outlined">settings</span>
