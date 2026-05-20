@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Main Client Inventory Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d8e3fb",
+                        "on-secondary-container": "#004d6a",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#cfdaf2",
+                        "primary-fixed-dim": "#bec6e0",
+                        "background": "#f9f9ff",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#565e74",
+                        "outline": "#76777d",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary-container": "#7073ff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary": "#000000",
+                        "surface": "#f9f9ff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#001e2c",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-surface": "#111c2d",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-background": "#111c2d",
+                        "surface-container-highest": "#d8e3fb",
+                        "surface-container-high": "#dee8ff",
+                        "secondary-container": "#40c2fd",
+                        "surface-container-low": "#f0f3ff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "secondary": "#00668a",
+                        "primary-container": "#131b2e",
+                        "tertiary-container": "#07006c",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e7eeff",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed": "#dae2fd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "component-padding-x": "1rem",
+                        "margin-mobile": "16px",
+                        "component-padding-y": "0.75rem",
+                        "margin-desktop": "32px",
+                        "container-max-width": "1440px",
+                        "gutter": "24px",
+                        "sidebar-width": "280px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "numeric-data": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "numeric-data": ["20px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #F8FAFC; }
+        .glass-sidebar {
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .data-card {
+            background: white;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-primary-container backdrop-blur-xl shadow-sm flex flex-col hidden md:flex z-50">
+<div class="p-6">
+<h1 class="font-headline-md text-headline-md text-on-primary-fixed">Inventory Command</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container mt-1">BrandQure</p>
+</div>
+<div class="flex-1 mt-6">
+<a class="flex items-center gap-3 bg-white/10 text-white border-l-4 border-secondary-container px-4 py-3 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container hover:bg-white/5 px-4 py-3 transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                Inventory
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container hover:bg-white/5 px-4 py-3 transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                Reports
+            </a>
+<a class="flex items-center gap-3 text-on-primary-container hover:bg-white/5 px-4 py-3 transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Clients
+            </a>
+</div>
+<div class="p-6 mt-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a person looking forward, brightly lit against a neutral background, suitable for a corporate profile avatar. The style is clean and modern, evoking trust and reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWaKoi5tbtZaKvFko4c_xH4L_DVwHGrsVA-ssCajhX2Q45vsXDaj7c3qJhHBiXkUoL2BTMqGDuyAAG_JeN8wdo_GmvVpmVOgBEIDY6Q8re7tlcoTH3o25Z6RjivGy-a7Y-b6S1MFX4C-x3xZghwhLq454gB1r1gTCwf_6q-0VIo9y2AX1VFBXxp11Ne8hmevXcFKZ9C1mvFqDEhMBB98vy1msGHF0aphjUjE5yHtPN1Ag8pOynZr3c2yiYP4B3pFvEmmX5TrhFwyQ9"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-white">Alex Johnson</p>
+<p class="font-label-sm text-label-sm text-on-primary-container">Admin</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-280px)] h-16 border-b border-outline-variant bg-surface-bright/80 backdrop-blur-md shadow-sm z-40 flex justify-between items-center px-4 md:px-8">
+<div class="flex items-center flex-1">
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white border border-outline-variant rounded-full font-body-md text-body-md focus:outline-none focus:border-secondary-container focus:ring-2 focus:ring-secondary-container/20 transition-all text-on-surface placeholder-on-surface-variant" placeholder="Search SKUs, Clients..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="md:ml-[280px] pt-24 pb-16 px-4 md:px-8 max-w-[1440px] mx-auto min-h-screen flex flex-col gap-6">
+<!-- Header & Filters -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Acme Corp Global</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Inventory Overview &amp; Health Status</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-full border border-outline-variant bg-white font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">Amazon</button>
+<button class="px-4 py-2 rounded-full border-2 border-secondary-container bg-surface-container-low font-label-md text-label-md text-primary font-bold">Shopify</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant bg-white font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">Walmart</button>
+</div>
+</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="data-card p-6 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="font-label-md text-label-md text-on-surface-variant">Total Active SKUs</p>
+<span class="material-symbols-outlined text-outline">inventory</span>
+</div>
+<p class="font-display-lg text-display-lg text-primary">1,248</p>
+<p class="font-label-sm text-label-sm text-secondary-container">+12% vs last month</p>
+</div>
+<div class="data-card p-6 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="font-label-md text-label-md text-on-surface-variant">Out of Stock</p>
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<p class="font-display-lg text-display-lg text-primary">24</p>
+<p class="font-label-sm text-label-sm text-error">Requires immediate action</p>
+</div>
+<div class="data-card p-6 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="font-label-md text-label-md text-on-surface-variant">Overstock Items</p>
+<span class="material-symbols-outlined text-on-tertiary-container">inventory_2</span>
+</div>
+<p class="font-display-lg text-display-lg text-primary">156</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Capital tied up: $45k</p>
+</div>
+<div class="data-card p-6 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="font-label-md text-label-md text-on-surface-variant">In Transit</p>
+<span class="material-symbols-outlined text-secondary">local_shipping</span>
+</div>
+<p class="font-display-lg text-display-lg text-primary">3,450</p>
+<p class="font-label-sm text-label-sm text-secondary">Units arriving next 7 days</p>
+</div>
+</div>
+<!-- Bento Grid: Charts & Visuals -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Health Chart -->
+<div class="data-card p-6 lg:col-span-2 flex flex-col h-[400px]">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Inventory Health Trend</h3>
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg flex items-center justify-center relative overflow-hidden">
+<!-- Placeholder for Chart -->
+<div class="absolute inset-0 bg-gradient-to-b from-secondary-fixed/20 to-transparent"></div>
+<div class="w-full h-full p-4 flex items-end">
+<div class="w-full h-1/2 flex items-end justify-between gap-2 px-2">
+<div class="w-full bg-surface-container-high rounded-t-sm h-1/3 relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-1/2 relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-[40%] relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-2/3 relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-[60%] relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-[80%] relative"><div class="absolute bottom-full left-0 w-full h-px bg-secondary-container"></div></div>
+<div class="w-full bg-secondary-container/20 rounded-t-sm h-full border-t-2 border-secondary-container"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Safe Zone Gauge -->
+<div class="data-card p-6 flex flex-col h-[400px]">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Global Safe Zone</h3>
+<div class="flex-1 flex flex-col items-center justify-center">
+<div class="relative w-48 h-48 rounded-full border-8 border-surface-container flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-8 border-secondary-container border-t-transparent border-r-transparent rotate-45"></div>
+<div class="text-center">
+<p class="font-display-lg text-display-lg text-primary">78%</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Optimal Range</p>
+</div>
+</div>
+<div class="mt-8 w-full flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Critical</span>
+<span>Healthy</span>
+<span>Surplus</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline & Table Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+<!-- Timeline -->
+<div class="data-card p-6 lg:col-span-1 h-[500px] overflow-y-auto">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Inbound Timeline</h3>
+<div class="flex flex-col gap-6 relative">
+<div class="absolute left-3 top-2 bottom-2 w-px bg-outline-variant"></div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-secondary-container flex-shrink-0 z-10 border-4 border-white"></div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Today, 2:00 PM</p>
+<p class="font-body-md text-body-md text-primary">PO-8829 Arriving</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">450 Units - LAX Port</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex-shrink-0 z-10 border-4 border-white"></div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Tomorrow</p>
+<p class="font-body-md text-body-md text-primary">PO-8830 Clearing Customs</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">1,200 Units</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex-shrink-0 z-10 border-4 border-white"></div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Oct 24</p>
+<p class="font-body-md text-body-md text-primary">PO-8831 Expected</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">800 Units - NYC Port</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Table -->
+<div class="data-card p-0 lg:col-span-3 overflow-hidden flex flex-col h-[500px]">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center bg-white sticky top-0 z-10">
+<h3 class="font-headline-md text-headline-md text-on-surface">Critical SKU Monitor</h3>
+<button class="font-label-md text-label-md text-secondary-container hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse min-w-[600px]">
+<thead class="bg-surface-container-lowest sticky top-0 z-0">
+<tr>
+<th class="p-4 font-label-md text-label-md text-on-surface-variant font-semibold border-b border-outline-variant">SKU / Product</th>
+<th class="p-4 font-label-md text-label-md text-on-surface-variant font-semibold border-b border-outline-variant">Available</th>
+<th class="p-4 font-label-md text-label-md text-on-surface-variant font-semibold border-b border-outline-variant">Velocity (7d)</th>
+<th class="p-4 font-label-md text-label-md text-on-surface-variant font-semibold border-b border-outline-variant">Days of Supply</th>
+<th class="p-4 font-label-md text-label-md text-on-surface-variant font-semibold border-b border-outline-variant">Status</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface bg-white">
+<tr class="hover:bg-surface-container-lowest transition-colors border-b border-outline-variant/50">
+<td class="p-4">
+<p class="font-semibold text-primary">PRO-X-100</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Wireless Earbuds</p>
+</td>
+<td class="p-4 font-numeric-data text-numeric-data">12</td>
+<td class="p-4 font-numeric-data text-numeric-data">45/wk</td>
+<td class="p-4"><span class="text-error font-bold">1.8</span></td>
+<td class="p-4"><span class="px-2 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">Critical Low</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors border-b border-outline-variant/50">
+<td class="p-4">
+<p class="font-semibold text-primary">ACC-C-200</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Charging Pad</p>
+</td>
+<td class="p-4 font-numeric-data text-numeric-data">845</td>
+<td class="p-4 font-numeric-data text-numeric-data">20/wk</td>
+<td class="p-4">295</td>
+<td class="p-4"><span class="px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">Overstock</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors border-b border-outline-variant/50">
+<td class="p-4">
+<p class="font-semibold text-primary">SYS-M-500</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Smart Monitor</p>
+</td>
+<td class="p-4 font-numeric-data text-numeric-data">156</td>
+<td class="p-4 font-numeric-data text-numeric-data">30/wk</td>
+<td class="p-4">36</td>
+<td class="p-4"><span class="px-2 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">Healthy</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors border-b border-outline-variant/50">
+<td class="p-4">
+<p class="font-semibold text-primary">GAM-C-300</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Gaming Controller</p>
+</td>
+<td class="p-4 font-numeric-data text-numeric-data">0</td>
+<td class="p-4 font-numeric-data text-numeric-data">85/wk</td>
+<td class="p-4"><span class="text-error font-bold">0.0</span></td>
+<td class="p-4"><span class="px-2 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">Out of Stock</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="md:ml-[280px] w-full py-6 mt-auto border-t border-outline-variant bg-surface-container-lowest">
+<div class="flex justify-between items-center px-4 md:px-8 max-w-[1440px] mx-auto">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Powered by BrandQure © 2024 • Generated on System Time</p>
+<div class="flex gap-4">
+<a class="font-label-sm text-label-sm text-outline hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-outline hover:text-primary transition-colors" href="#">Support</a>
+<a class="font-label-sm text-label-sm text-outline hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+</footer>
+</body></html>

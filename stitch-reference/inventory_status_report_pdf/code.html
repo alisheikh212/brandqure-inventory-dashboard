@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inventory Command Center - Print Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d8e3fb",
+                        "on-secondary-container": "#004d6a",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#cfdaf2",
+                        "primary-fixed-dim": "#bec6e0",
+                        "background": "#f9f9ff",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#565e74",
+                        "outline": "#76777d",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary-container": "#7073ff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary": "#000000",
+                        "surface": "#f9f9ff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#001e2c",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-surface": "#111c2d",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-background": "#111c2d",
+                        "surface-container-highest": "#d8e3fb",
+                        "surface-container-high": "#dee8ff",
+                        "secondary-container": "#40c2fd",
+                        "surface-container-low": "#f0f3ff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "secondary": "#00668a",
+                        "primary-container": "#131b2e",
+                        "tertiary-container": "#07006c",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e7eeff",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed": "#dae2fd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "component-padding-x": "1rem",
+                        "margin-mobile": "16px",
+                        "component-padding-y": "0.75rem",
+                        "margin-desktop": "32px",
+                        "container-max-width": "1440px",
+                        "gutter": "24px",
+                        "sidebar-width": "280px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "numeric-data": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "numeric-data": ["20px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Print specific adjustments to ensure backgrounds render */
+        @media print {
+            body { background-color: #ffffff; }
+            .print-shadow-none { box-shadow: none !important; }
+            .print-bg-white { background-color: #ffffff !important; }
+            .print-m-0 { margin: 0 !important; }
+            .print-border-black { border-color: #000000 !important; }
+            /* Force background colors in print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body class="bg-surface-container min-h-screen py-10 print:py-0 font-body-md text-on-surface">
+<!-- Document Viewer Container (Simulates 8.5x11 Paper) -->
+<!-- 816px wide is roughly 8.5 inches at 96dpi. 1056px is roughly 11 inches. -->
+<div class="max-w-[816px] min-h-[1056px] mx-auto bg-surface-container-lowest print-bg-white shadow-xl print-shadow-none print-m-0 flex flex-col relative px-12 pt-12 pb-8 border border-outline-variant print:border-none">
+<!-- Report Header -->
+<header class="flex justify-between items-end border-b-2 border-primary pb-6 mb-8">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">dashboard_customize</span>
+<span class="font-headline-md text-headline-md uppercase tracking-wide">BrandQure</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mt-2">Inventory Command Center</h1>
+<h2 class="font-headline-md text-headline-md text-on-surface-variant">Status Report</h2>
+</div>
+<div class="text-right flex flex-col gap-1 text-on-surface-variant">
+<span class="font-label-md text-label-md uppercase tracking-widest text-outline">Report Date</span>
+<span class="font-numeric-data text-numeric-data">October 26, 2024</span>
+<span class="font-label-sm text-label-sm mt-2">ID: REP-883A-91X</span>
+</div>
+</header>
+<!-- Executive Summary -->
+<section class="mb-10">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">subject</span>
+                Executive Summary
+            </h3>
+<div class="bg-surface p-6 rounded border border-outline-variant">
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    This document provides a high-level overview of the current operational inventory status across all active regions. Total holding capacity remains stable at 84%, with no immediate critical logistical blockages detected. However, specific high-velocity SKUs within the 'Electronics' and 'Specialty Components' sectors require immediate procurement review to prevent potential stockouts in the upcoming quarter. Overall asset valuation remains within the projected fiscal boundaries.
+                </p>
+</div>
+</section>
+<!-- Health Charts (Print-friendly Bento layout) -->
+<section class="mb-10">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">monitoring</span>
+                System Health &amp; Metrics
+            </h3>
+<div class="grid grid-cols-3 gap-6">
+<!-- Metric 1 -->
+<div class="border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Active Units</span>
+<div class="flex items-end justify-between mt-2">
+<span class="font-display-lg text-display-lg text-primary">124.5<span class="text-headline-md text-outline">k</span></span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-variant px-2 py-1 rounded mb-2">+2.4% MoM</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Critical Low Stock</span>
+<div class="flex items-end justify-between mt-2">
+<span class="font-display-lg text-display-lg text-error">14</span>
+<span class="font-label-sm text-label-sm text-error bg-error-container px-2 py-1 rounded mb-2">Needs Action</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="border border-outline-variant p-5 rounded flex flex-col justify-between bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Warehouse Capacity</span>
+<div class="mt-4">
+<div class="flex justify-between mb-1">
+<span class="font-numeric-data text-numeric-data text-primary">84%</span>
+<span class="font-label-sm text-label-sm text-outline">Zone A-C</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden border border-outline-variant">
+<div class="bg-primary h-full rounded-full" style="width: 84%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Inventory Table -->
+<section class="flex-grow mb-12">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">table_chart</span>
+                Priority Inventory Audit
+            </h3>
+<div class="w-full overflow-x-auto border border-outline-variant rounded">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface text-on-surface-variant font-label-md text-label-md border-b-2 border-outline">
+<th class="py-3 px-4 uppercase tracking-wider">SKU</th>
+<th class="py-3 px-4 uppercase tracking-wider">Product Description</th>
+<th class="py-3 px-4 uppercase tracking-wider">Category</th>
+<th class="py-3 px-4 uppercase tracking-wider text-right">Qty</th>
+<th class="py-3 px-4 uppercase tracking-wider">Status</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant">
+<td class="py-3 px-4 font-numeric-data text-sm">ELC-992-A</td>
+<td class="py-3 px-4 font-semibold">Quantum Core Processor V2</td>
+<td class="py-3 px-4 text-on-surface-variant">Electronics</td>
+<td class="py-3 px-4 text-right font-numeric-data">4,200</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-1 bg-surface-variant text-secondary text-xs rounded font-label-sm border border-outline-variant">Optimal</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant bg-error-container/10">
+<td class="py-3 px-4 font-numeric-data text-sm">SPC-110-X</td>
+<td class="py-3 px-4 font-semibold">Titanium Housing Assembly</td>
+<td class="py-3 px-4 text-on-surface-variant">Components</td>
+<td class="py-3 px-4 text-right font-numeric-data text-error">12</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-1 bg-error text-on-error text-xs rounded font-label-sm">Critical</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-3 px-4 font-numeric-data text-sm">PWR-445-B</td>
+<td class="py-3 px-4 font-semibold">High-Yield Battery Cell</td>
+<td class="py-3 px-4 text-on-surface-variant">Energy</td>
+<td class="py-3 px-4 text-right font-numeric-data">850</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-1 bg-surface-container text-on-surface text-xs rounded font-label-sm border border-outline-variant">Low Stock</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-3 px-4 font-numeric-data text-sm">MEC-202-Y</td>
+<td class="py-3 px-4 font-semibold">Precision Servo Motor</td>
+<td class="py-3 px-4 text-on-surface-variant">Mechanical</td>
+<td class="py-3 px-4 text-right font-numeric-data">1,105</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-1 bg-surface-variant text-secondary text-xs rounded font-label-sm border border-outline-variant">Optimal</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-3 px-4 font-numeric-data text-sm">SEN-004-Z</td>
+<td class="py-3 px-4 font-semibold">Environmental Sensor Array</td>
+<td class="py-3 px-4 text-on-surface-variant">Electronics</td>
+<td class="py-3 px-4 text-right font-numeric-data">340</td>
+<td class="py-3 px-4">
+<span class="inline-block px-2 py-1 bg-surface-container text-on-surface text-xs rounded font-label-sm border border-outline-variant">Warning</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Footer Shared Component Injection (Adapted for Document Bottom) -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm w-full py-6 mt-auto border-t border-outline-variant flex justify-between items-center px-0">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-semibold text-primary">BrandQure</span>
+<span class="text-outline">|</span>
+<span>Powered by BrandQure © 2024 • Generated on System Time</span>
+</div>
+<div class="flex gap-4">
+<a class="text-outline hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-outline hover:text-primary transition-colors" href="#">Support</a>
+<a class="text-outline hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+</div>
+</body></html>

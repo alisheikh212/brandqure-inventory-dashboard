@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SKU Action Modal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d8e3fb",
+                        "on-secondary-container": "#004d6a",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#cfdaf2",
+                        "primary-fixed-dim": "#bec6e0",
+                        "background": "#f9f9ff",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#565e74",
+                        "outline": "#76777d",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary-container": "#7073ff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary": "#000000",
+                        "surface": "#f9f9ff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#001e2c",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-surface": "#111c2d",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-background": "#111c2d",
+                        "surface-container-highest": "#d8e3fb",
+                        "surface-container-high": "#dee8ff",
+                        "secondary-container": "#40c2fd",
+                        "surface-container-low": "#f0f3ff",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "secondary": "#00668a",
+                        "primary-container": "#131b2e",
+                        "tertiary-container": "#07006c",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e7eeff",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed": "#dae2fd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "component-padding-x": "1rem",
+                        "margin-mobile": "16px",
+                        "component-padding-y": "0.75rem",
+                        "margin-desktop": "32px",
+                        "container-max-width": "1440px",
+                        "gutter": "24px",
+                        "sidebar-width": "280px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "numeric-data": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "numeric-data": ["20px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background min-h-screen text-on-surface font-sans antialiased">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4 md:p-6">
+<div class="w-full max-w-lg rounded-xl bg-surface-container-lowest shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),_0_8px_10px_-6px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border border-outline-variant/30 relative">
+<div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface m-0">Update 3PL Status</h2>
+<button class="p-2 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors flex items-center justify-center" type="button">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">SKU Name</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-4 text-outline pointer-events-none">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2">inventory_2</span>
+</span>
+<input class="w-full pl-11 pr-4 py-3 rounded-lg bg-surface-container border border-outline-variant/50 text-on-surface-variant font-body-md text-body-md cursor-not-allowed focus:outline-none shadow-sm" readonly="" type="text" value="SYS-CORE-ROUTER-X9"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Current 3PL Location</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-4 text-secondary pointer-events-none">
+<span class="material-symbols-outlined text-[20px]" data-icon="warehouse">warehouse</span>
+</span>
+<input class="w-full pl-11 pr-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all shadow-sm placeholder-outline" type="text" value="Apex Logistics - Dallas Hub"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">New Status</label>
+<div class="relative">
+<select class="w-full pl-4 pr-11 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md appearance-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all shadow-sm cursor-pointer">
+<option disabled="" value="">Select status...</option>
+<option selected="" value="processing">Processing</option>
+<option value="shipped">Shipped</option>
+<option value="arrived">Arrived</option>
+</select>
+<span class="absolute inset-y-0 right-0 flex items-center pr-4 text-outline pointer-events-none">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant flex justify-between">
+<span>Notes</span>
+<span class="text-outline font-normal">Optional</span>
+</label>
+<textarea class="w-full px-4 py-3 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all resize-none shadow-sm placeholder-outline/70" placeholder="Add tracking identifiers or processing remarks..." rows="3"></textarea>
+</div>
+</div>
+<div class="px-6 py-5 border-t border-outline-variant/30 bg-surface-container-low flex justify-end gap-3">
+<button class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-variant hover:border-outline transition-all duration-200" type="button">
+                    Cancel
+                </button>
+<button class="px-6 py-2.5 rounded-lg bg-gradient-to-r from-secondary to-[#004d6a] text-on-secondary font-label-md text-label-md hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="sync_alt">sync_alt</span>
+                    Update 3PL
+                </button>
+</div>
+</div>
+</div>
+</body></html>
