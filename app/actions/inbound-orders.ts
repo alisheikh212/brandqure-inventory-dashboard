@@ -72,11 +72,16 @@ export async function createInboundOrders(
   // Validate each row
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
-    if (!row.sku) return { success: false, error: `Row ${i + 1}: SKU is required.` }
-    if (!row.productName) return { success: false, error: `Row ${i + 1}: Product name is required.` }
-    if (!row.marketplace) return { success: false, error: `Row ${i + 1}: Marketplace is required.` }
-    if (!row.quantity || row.quantity < 1) return { success: false, error: `Row ${i + 1}: Quantity must be at least 1.` }
-    if (row.estimatedDaysToFba < 0) return { success: false, error: `Row ${i + 1}: Days to FBA cannot be negative.` }
+    const label = `Row ${i + 1}`
+    if (!row.sku) return { success: false, error: `${label}: SKU is required.` }
+    if (!row.productName) return { success: false, error: `${label}: Product name is required.` }
+    if (!row.marketplace) return { success: false, error: `${label}: Marketplace is required.` }
+    if (!Number.isFinite(row.quantity) || row.quantity < 1) {
+      return { success: false, error: `${label}: Quantity must be a whole number of at least 1.` }
+    }
+    if (!Number.isFinite(row.estimatedDaysToFba) || row.estimatedDaysToFba < 0) {
+      return { success: false, error: `${label}: Days to FBA must be 0 or greater.` }
+    }
   }
 
   // Compute expected arrival date for each row: today + estimatedDaysToFba

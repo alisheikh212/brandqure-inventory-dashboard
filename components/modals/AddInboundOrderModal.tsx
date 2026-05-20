@@ -90,6 +90,26 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
 
   function handleSave() {
     setError(null)
+
+    // Client-side validation before hitting the server
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]
+      const label = `Row ${i + 1}`
+      if (!r.sku) { setError(`${label}: Please select a SKU.`); return }
+
+      const qty = parseInt(r.quantity, 10)
+      if (r.quantity === '' || isNaN(qty) || qty < 1) {
+        setError(`${label}: Quantity must be a whole number of at least 1.`)
+        return
+      }
+
+      const days = parseInt(r.estimatedDaysToFba, 10)
+      if (r.estimatedDaysToFba === '' || isNaN(days) || days < 0) {
+        setError(`${label}: Days to FBA must be 0 or greater.`)
+        return
+      }
+    }
+
     startTransition(async () => {
       const payload = rows.map((r) => ({
         sku: r.sku,
