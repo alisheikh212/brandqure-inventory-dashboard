@@ -29,13 +29,13 @@ export default function Header({ initials }: HeaderProps) {
         >
           <span className="material-symbols-outlined">notifications</span>
         </button>
-        <button
-          type="button"
-          aria-label="Settings"
+        <a
+          href="/admin"
+          aria-label="Admin"
           className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors"
         >
           <span className="material-symbols-outlined">settings</span>
-        </button>
+        </a>
 
         {/* Logout */}
         <form action="/logout" method="POST" className="ml-1">
