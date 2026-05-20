@@ -16,24 +16,29 @@ import InboundSummary from "./InboundSummary";
 import InventoryTable from "./InventoryTable";
 import AddOrderedUnitsModal from "@/components/modals/AddOrderedUnitsModal";
 import Update3PLStatusModal from "@/components/modals/Update3PLStatusModal";
+import AddInboundOrderModal from "@/components/modals/AddInboundOrderModal";
 import { refreshSheetData } from "@/app/actions/refresh-sheet";
+import type { InboundOrder } from "@/lib/types";
 import Link from "next/link";
 
 type ModalState =
   | { type: null }
   | { type: "add-units"; row: InventoryRow }
-  | { type: "update-3pl"; row: InventoryRow };
+  | { type: "update-3pl"; row: InventoryRow }
+  | { type: "add-inbound" };
 
 interface DashboardContentProps {
   client: Client;
   inventory: InventoryRow[];
   stats: SummaryStats;
+  inboundOrders: InboundOrder[];
 }
 
 export default function DashboardContent({
   client,
   inventory,
   stats,
+  inboundOrders,
 }: DashboardContentProps) {
   const [activeMarketplace, setActiveMarketplace] =
     useState<MarketplaceFilter>("All");
@@ -80,6 +85,18 @@ export default function DashboardContent({
                 {mp}
               </button>
             ))}
+
+            {/* Add Inbound Order — visible to all authenticated users */}
+            <button
+              type="button"
+              onClick={() => setModal({ type: "add-inbound" })}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                add
+              </span>
+              Add Inbound Order
+            </button>
 
             {/* Manual sheet refresh */}
             <button
@@ -131,7 +148,7 @@ export default function DashboardContent({
 
         {/* Timeline + Table */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <InboundSummary inventory={inventory} />
+          <InboundSummary inventory={inventory} inboundOrders={inboundOrders} />
           <InventoryTable
             rows={inventory}
             activeMarketplace={activeMarketplace}
@@ -172,6 +189,13 @@ export default function DashboardContent({
       {modal.type === "update-3pl" && (
         <Update3PLStatusModal
           row={modal.row}
+          onClose={() => setModal({ type: null })}
+        />
+      )}
+      {modal.type === "add-inbound" && (
+        <AddInboundOrderModal
+          clientSlug={client.slug}
+          inventory={inventory}
           onClose={() => setModal({ type: null })}
         />
       )}

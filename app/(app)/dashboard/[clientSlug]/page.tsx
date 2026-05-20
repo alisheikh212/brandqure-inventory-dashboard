@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getClientConfig } from "@/lib/clients";
 import { getInventoryFromSheet } from "@/lib/sheets";
 import { computeSummaryStats } from "@/lib/reorder";
+import { getPendingInboundOrders } from "@/app/actions/inbound-orders";
 import type { Client, StockStatus, InventoryRow } from "@/lib/mock-data";
 import type { ClientConfig } from "@/lib/clients";
 import type { SummaryStats } from "@/lib/mock-data";
@@ -67,7 +68,11 @@ export default async function DashboardPage({ params }: PageProps) {
   if (!clientConfig) notFound();
 
   // Throws on failure — propagates to error.tsx boundary. No mock fallback.
-  const inventory = await getInventoryFromSheet(clientConfig);
+  const [inventory, inboundOrders] = await Promise.all([
+    getInventoryFromSheet(clientConfig),
+    getPendingInboundOrders(clientSlug),
+  ]);
+
   const stats = computeSummaryStats(inventory);
   const client = toClientShape(clientConfig, stats, inventory);
 
@@ -76,6 +81,7 @@ export default async function DashboardPage({ params }: PageProps) {
       client={client}
       inventory={inventory}
       stats={stats}
+      inboundOrders={inboundOrders}
     />
   );
 }
