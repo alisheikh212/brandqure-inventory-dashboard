@@ -181,3 +181,33 @@ The rule is: **only `role === "admin"` may access `/admin`**. Any other value �
 Do not revert this to silently returning `null`/`[]` on error. The old behaviour made Supabase outages look like missing client slugs (404) or empty databases (empty admin grid), hiding infrastructure problems.
 
 The admin page has its own `error.tsx` (`app/(app)/admin/error.tsx`) specifically because `getAllClientConfigs` can now throw.
+
+---
+
+## Rule 14: App-created inbound orders are display-only — do not include them in reorder calculations
+
+Phase 4A introduced a Supabase `inbound_orders` table for tracking shipments created inside the app. These orders appear in the **Tracked Orders** section of `InboundSummary` with a countdown badge.
+
+**Critical constraint:** app-created inbound orders are **not included in the reorder formula**. The formula in `lib/reorder.ts → recommendedReorderQty()` still uses only `row.inboundUnits` from column F of the Google Sheet:
+
+```
+reorder = max(0, ceil(avgDailySales × (leadTimeDays + 60)) − fbaAvailable − inboundUnits)
+```
+
+Do **not** add `inboundOrders` quantities to this calculation until the double-counting rules are explicitly decided and approved. A shipment may be tracked in both the Supabase table (app-created) and in the Google Sheet `inboundUnits` column (manually updated). Including both would double-count the same stock.
+
+The two inbound sources in `InboundSummary` are intentionally kept separate:
+- **Tracked Orders** — from Supabase `inbound_orders` (status = `pending`), with expected arrival date countdown
+- **Sheet Inbound** — from Google Sheets `inboundUnits > 0`, no dates, no countdown
+
+**Numeric validation:** server-side validation of inbound order fields must use `Number.isFinite()`, not comparisons against `NaN`. `NaN < 0` evaluates to `false`, which would pass invalid values through to Supabase. The correct pattern:
+
+```typescript
+if (!Number.isFinite(row.quantity) || row.quantity < 1) { ... }
+if (!Number.isFinite(row.estimatedDaysToFba) || row.estimatedDaysToFba < 0) { ... }
+```
+
+**Access rules:**
+- Admin: can create orders for any client, can mark orders as received (`markOrderReceived`)
+- Client: can create orders only for their own `clientSlug`; cannot mark orders received
+- `getPendingInboundOrders` is non-fatal — returns `[]` on Supabase error so the dashboard still loads from Google Sheets

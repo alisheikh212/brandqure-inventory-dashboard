@@ -1,8 +1,8 @@
 # BrandQure Inventory Command Center — Project Handoff
 
 > **For:** Codex or any coding agent continuing this project
-> **Phase completed:** Phase 3A (Supabase auth) + Phase 3B (Google Sheets integration) + Phase 3C stabilization pass
-> **Date last updated:** 2026-05-19
+> **Phase completed:** Phase 3A (Supabase auth) + Phase 3B (Google Sheets integration) + Phase 3C stabilization pass + Phase 3D-A (Admin Client & User Manager) + Phase 4A (Inbound Order Entry)
+> **Date last updated:** 2026-05-21
 
 ---
 
@@ -689,3 +689,120 @@ Route (app)
 ```
 
 Type-check: 0 errors. Lint: 0 errors. Production build: clean.
+
+---
+
+## 16. Phase 4A — Inbound Order Entry (completed 2026-05-21)
+
+### What Was Built
+
+| File | Change |
+|---|---|
+| `lib/types.ts` | **New** — `InboundOrder` type mirroring the `inbound_orders` Supabase table shape. Lives outside `lib/mock-data.ts` — this is a real data type, not a mock. |
+| `app/actions/inbound-orders.ts` | **New** — three exported functions: `createInboundOrders`, `markOrderReceived` (stub, not yet wired to UI), `getPendingInboundOrders`. Access-controlled via `requireAuthForClient` and `requireAdmin` guards. |
+| `components/modals/AddInboundOrderModal.tsx` | **New** — multi-row entry modal. SKU dropdown is populated from the current client's live Google Sheets inventory. Selecting a SKU auto-fills product name and marketplace. Supports up to 15 rows per save. |
+| `components/dashboard/InboundSummary.tsx` | **Updated** — now accepts `inboundOrders: InboundOrder[]` in addition to `inventory`. Renders two independent sections: **Tracked Orders** (Supabase, with countdown badge) and **Sheet Inbound** (Google Sheets `inboundUnits`, no dates). |
+| `components/dashboard/DashboardContent.tsx` | **Updated** — accepts `inboundOrders` prop; passes it to `InboundSummary`. Renders **Add Inbound Order** button visible to all authenticated users. New modal state `{ type: 'add-inbound' }`. |
+| `app/(app)/dashboard/[clientSlug]/page.tsx` | **Updated** — fetches `getPendingInboundOrders` in `Promise.all` alongside `getInventoryFromSheet`. No added latency — both fetches run in parallel. |
+
+### Supabase — `inbound_orders` Table
+
+**Purpose:** Tracks inventory orders that have been placed but have not yet arrived at FBA. Provides countdown visibility on the dashboard without requiring manual Google Sheet updates.
+
+```sql
+CREATE TABLE public.inbound_orders (
+  id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_slug           text NOT NULL REFERENCES public.clients(client_slug) ON DELETE CASCADE,
+  sku                   text NOT NULL,
+  asin                  text,
+  product_name          text NOT NULL,
+  marketplace           text NOT NULL,
+  quantity              int NOT NULL CHECK (quantity > 0),
+  estimated_days_to_fba int NOT NULL CHECK (estimated_days_to_fba >= 0),
+  expected_arrival_date date NOT NULL,   -- computed at insert: today + estimated_days_to_fba
+  status                text NOT NULL DEFAULT 'pending'
+                          CHECK (status IN ('pending', 'received', 'cancelled')),
+  created_at            timestamptz NOT NULL DEFAULT now(),
+  received_at           timestamptz,
+  created_by            uuid REFERENCES auth.users(id)
+);
+```
+
+**RLS Policies:**
+- `admin_all_inbound` — admin role has full SELECT/INSERT/UPDATE access across all clients
+- `client_read_own_inbound` — client role has SELECT only, filtered to their own `client_slug`
+
+**Write path:** All inserts and updates use the service role client (`createAdminClient()`) — RLS is bypassed at the DB level. Access is enforced by the Server Action guards before any DB call. Clients are prevented from writing to other clients' rows by the `requireAuthForClient(clientSlug)` check, not by an INSERT RLS policy.
+
+### Access Rules
+
+| User | Can create orders | Scope |
+|---|---|---|
+| Admin | ✅ Yes | Any client |
+| Client | ✅ Yes | Their own `clientSlug` only |
+| Unauthenticated | ❌ No | Rejected before DB |
+
+Enforcement is **server-side only** — the `createInboundOrders` Server Action calls `requireAuthForClient(clientSlug)` before any validation or database write. The UI button is visible to all users; security does not rely on hiding the button.
+
+### Inbound Summary — Two Independent Sources
+
+| Section | Source | Has countdown? |
+|---|---|---|
+| Tracked Orders | Supabase `inbound_orders` (status = pending) | ✅ Yes — days until `expected_arrival_date` |
+| Sheet Inbound | Google Sheets col F (`inboundUnits > 0`) | ❌ No — no date in the sheet |
+
+Both sections can be visible simultaneously. Each is derived independently — they do not merge or deduplicate.
+
+### Reorder Calculations — Important Constraint
+
+**App-created inbound orders are NOT included in reorder calculations.**
+
+The current formula in `lib/reorder.ts` uses only the Google Sheet `inboundUnits` column:
+
+```
+reorder = max(0, ceil(avgDailySales × (leadTimeDays + 60)) − fbaAvailable − inboundUnits)
+//                                                                          ↑ Sheet col F only
+```
+
+Supabase `inbound_orders.quantity` values are used for display in `InboundSummary` only. They do not reduce the recommended reorder quantity.
+
+**Why not included yet:** Until the workflow is defined — whether the Google Sheet and the app track the same shipments (double-counting risk) or different stages (safe to add) — including both sources would produce incorrect recommendations. This decision requires explicit approval before implementation. See CLAUDE.md Rule 14.
+
+### Validation
+
+Both layers enforce:
+- `quantity`: must be present, a finite integer, and ≥ 1
+- `estimatedDaysToFba`: must be present, a finite integer, and ≥ 0
+- `NaN` and `Infinity` are rejected explicitly using `Number.isFinite()` on the server, and `isNaN()` + empty-string checks on the client
+
+Client-side validation fires before `startTransition` — no server round-trip for clearly invalid inputs. Server-side validation is an independent second pass — it cannot be bypassed by calling the action directly.
+
+### Build State After Phase 4A
+
+```
+Route (app)
+○  /                                    static
+○  /_not-found                          static
+ƒ  /admin                               dynamic
+ƒ  /admin/clients/[clientSlug]/edit     dynamic
+ƒ  /admin/clients/[clientSlug]/users/new  dynamic
+ƒ  /admin/clients/new                   dynamic
+ƒ  /dashboard/[clientSlug]             dynamic
+ƒ  /dashboard/[clientSlug]/print       dynamic
+ƒ  /dashboard/[clientSlug]/reorder     dynamic
+○  /login                               static
+ƒ  /logout                             dynamic
+ƒ  /settings                           dynamic
+```
+
+Type-check: 0 errors. Lint: 0 errors. Production build: clean. Committed and pushed to GitHub. Vercel auto-deployed.
+
+### Next Recommended Decision
+
+Before including app-created inbound orders in reorder calculations, define the workflow:
+
+- **Option A — Same shipment, two records:** The sheet's `inboundUnits` and the app's `inbound_orders` both track the same physical shipment. Adding both to the formula would double-count. Resolution: stop updating the sheet's inbound column and rely entirely on the app, or exclude one source from the formula.
+
+- **Option B — Different stages:** The sheet's `inboundUnits` reflects Amazon-visible inbound (already at an FC). The app's orders are earlier-stage (supplier → freight → not yet at FC). No double-counting. Resolution: safe to sum both in the formula.
+
+Once the workflow is decided, the formula change is a one-line addition in `lib/reorder.ts` — requires approval per CLAUDE.md Rule 6.
