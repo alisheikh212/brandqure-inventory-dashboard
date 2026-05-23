@@ -38,10 +38,10 @@ export default async function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-4xl">
 
         {/* Account info card */}
-        <div data-card className="p-6 lg:col-span-1 flex flex-col gap-5">
+        <div className="glass-panel p-6 lg:col-span-1 flex flex-col gap-5">
           {/* Avatar */}
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-on-tertiary-fixed-variant to-primary-container flex items-center justify-center flex-shrink-0 shadow-md">
               <span className="font-headline-md text-headline-md text-white">
                 {name.slice(0, 2).toUpperCase()}
               </span>
@@ -56,7 +56,7 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          <div className="border-t border-surface-variant pt-4 space-y-3">
+          <div className="border-t border-white/40 pt-4 space-y-3">
             <div>
               <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">
                 Email
@@ -89,7 +89,7 @@ export default async function SettingsPage() {
         </div>
 
         {/* Change password card */}
-        <div data-card className="p-6 lg:col-span-2">
+        <div className="glass-panel p-6 lg:col-span-2">
           <div className="mb-6">
             <h3 className="font-headline-md text-headline-md text-on-surface mb-1">Change Password</h3>
             <p className="font-body-md text-body-md text-on-surface-variant">

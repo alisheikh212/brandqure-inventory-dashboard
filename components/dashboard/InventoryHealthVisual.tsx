@@ -25,7 +25,7 @@ export default function InventoryHealthVisual() {
 
       <div className="flex-1 flex flex-col">
         {/* Chart area */}
-        <div className="flex-1 relative bg-surface-container-lowest border border-outline-variant/40 rounded-lg overflow-hidden">
+        <div className="flex-1 relative bg-white/40 border border-white/50 rounded-xl overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-secondary-fixed/20 to-transparent pointer-events-none" />
           {/* Y-axis lines */}
           {["100%", "75%", "50%", "25%"].map((pct) => (

@@ -76,10 +76,10 @@ export default function DashboardContent({
                 onClick={() =>
                   setActiveMarketplace(activeMarketplace === mp ? "All" : mp)
                 }
-                className={`px-4 py-2 rounded-full font-label-md text-label-md transition-colors ${
+                className={`px-4 py-2 rounded-full font-label-md text-label-md transition-all duration-150 shadow-sm ${
                   activeMarketplace === mp
-                    ? "border-2 border-secondary-container bg-surface-container-low text-primary font-bold"
-                    : "border border-outline-variant bg-white text-on-surface hover:bg-surface-container-low"
+                    ? "border border-secondary-container/70 bg-secondary-fixed/60 text-primary font-semibold backdrop-blur-sm shadow-md"
+                    : "border border-white/65 bg-white/60 text-on-surface hover:bg-white/80 backdrop-blur-sm"
                 }`}
               >
                 {mp}
@@ -90,7 +90,7 @@ export default function DashboardContent({
             <button
               type="button"
               onClick={() => setModal({ type: "add-inbound" })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-on-tertiary-fixed-variant to-primary text-white font-label-md text-label-md shadow-md hover:shadow-lg hover:opacity-95 hover:-translate-y-px transition-all duration-150"
             >
               <span className="material-symbols-outlined text-[18px]">
                 add
@@ -103,7 +103,7 @@ export default function DashboardContent({
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-outline-variant bg-white text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span
                 className={`material-symbols-outlined text-[18px] ${isRefreshing ? "animate-spin" : ""}`}
@@ -116,7 +116,7 @@ export default function DashboardContent({
             {/* Reorder planning link */}
             <Link
               href={`/dashboard/${client.slug}/reorder`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-outline-variant bg-white text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150"
             >
               <span className="material-symbols-outlined text-[18px]">
                 shopping_cart
@@ -127,7 +127,7 @@ export default function DashboardContent({
             {/* Print report link */}
             <Link
               href={`/dashboard/${client.slug}/print`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-outline-variant bg-white text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150"
             >
               <span className="material-symbols-outlined text-[18px]">
                 print
@@ -159,7 +159,7 @@ export default function DashboardContent({
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-outline-variant bg-surface-container-lowest py-6">
+      <footer className="border-t border-white/40 bg-white/30 backdrop-blur-sm py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-3 px-4 md:px-8 max-w-[1440px] mx-auto">
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             Powered by BrandQure © 2026 • Last updated: {client.lastUpdated}

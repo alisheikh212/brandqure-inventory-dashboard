@@ -25,7 +25,7 @@ export default async function AppLayout({
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-bg">
       <Sidebar role={role} name={name} initials={initials} />
       <Header initials={initials} />
       <div className="md:ml-[280px] pt-16 min-h-screen flex flex-col print:ml-0 print:pt-0">

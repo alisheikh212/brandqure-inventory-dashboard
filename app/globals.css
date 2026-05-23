@@ -135,6 +135,53 @@
    Global Component Utilities (Stitch Design System)
    ============================================================ */
 @layer utilities {
+  /* ── App background: layered gradient for depth ── */
+  .app-bg {
+    background-color: #eaeefc;
+    background-image:
+      radial-gradient(ellipse at 78% 6%, rgba(185, 196, 238, 0.45) 0%, transparent 52%),
+      radial-gradient(ellipse at 10% 90%, rgba(110, 185, 238, 0.20) 0%, transparent 48%);
+    min-height: 100vh;
+  }
+
+  /* ── Glass panel: replaces flat white cards ── */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.74);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    box-shadow:
+      0 4px 24px -4px rgba(17, 28, 45, 0.09),
+      0 1px 4px rgba(17, 28, 45, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    transition: box-shadow 0.2s ease;
+  }
+
+  /* ── Glass header: floating top bar ── */
+  .glass-header {
+    background: rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(220, 224, 240, 0.6);
+    box-shadow:
+      0 1px 0 rgba(17, 28, 45, 0.05),
+      0 4px 20px -4px rgba(17, 28, 45, 0.07);
+  }
+
+  /* ── Glass modal panel ── */
+  .glass-modal {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    box-shadow:
+      0 32px 64px -12px rgba(17, 28, 45, 0.20),
+      0 8px 24px -4px rgba(17, 28, 45, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+  }
+
   /* Login page full-bleed dark background */
   .bg-gradient-navy-charcoal {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
@@ -149,77 +196,118 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
 
-  /* Sidebar glassmorphism */
+  /* Sidebar: premium deep navy gradient */
   .glass-sidebar {
-    background-color: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(160deg, #0d1628 0%, #0f1c30 55%, #0a1220 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.18);
   }
 
-  /* Dashboard data cards */
+  /* Dashboard chart/visual data cards */
   .data-card {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.74);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.58);
     box-shadow:
-      0 10px 15px -3px rgba(0, 0, 0, 0.03),
-      0 4px 6px -4px rgba(0, 0, 0, 0.03);
-    border-radius: 12px;
+      0 4px 24px -4px rgba(17, 28, 45, 0.09),
+      0 1px 4px rgba(17, 28, 45, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
   }
 
   /* Client selection card shadow */
   .card-shadow {
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.06),
-      0 1px 2px rgba(0, 0, 0, 0.04);
+      0 2px 8px rgba(17, 28, 45, 0.07),
+      0 1px 3px rgba(17, 28, 45, 0.05);
   }
 
   /* Branded form input */
   .brand-input {
     width: 100%;
-    height: 44px;
+    height: 40px;
     padding: 0 12px;
-    background-color: #ffffff;
-    border: 1px solid #c6c6cd;
-    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.80);
+    border: 1px solid rgba(198, 198, 205, 0.70);
+    border-radius: 8px;
     color: #111c2d;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 24px;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.18s ease-in-out;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   .brand-input:focus {
     outline: none;
-    border-color: #2f2ebe;
-    box-shadow: 0 0 0 3px rgba(47, 46, 190, 0.15);
+    border-color: rgba(47, 46, 190, 0.55);
+    box-shadow: 0 0 0 3px rgba(47, 46, 190, 0.12);
+    background-color: rgba(255, 255, 255, 0.95);
   }
   .brand-input::placeholder {
-    color: #76777d;
+    color: #9a9ba3;
   }
   .brand-input:disabled,
   .brand-input[readonly] {
-    background-color: #e7eeff;
+    background-color: rgba(231, 238, 255, 0.60);
     cursor: not-allowed;
   }
 
-  /* Gradient CTA buttons */
+  /* ── Primary action buttons ── */
   .btn-primary-indigo {
-    background: linear-gradient(to right, #2f2ebe, #07006c);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #3b3ae8 0%, #09007a 100%);
     color: white;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 500;
     transition: all 0.2s ease-in-out;
+    box-shadow:
+      0 2px 8px rgba(47, 46, 190, 0.28),
+      0 1px 2px rgba(47, 46, 190, 0.15);
   }
-  .btn-primary-indigo:hover {
-    opacity: 0.92;
-    box-shadow: 0 4px 14px 0 rgba(7, 0, 108, 0.3);
+  .btn-primary-indigo:hover:not(:disabled) {
+    opacity: 0.93;
+    box-shadow:
+      0 6px 20px rgba(7, 0, 108, 0.38),
+      0 2px 6px rgba(7, 0, 108, 0.18);
+    transform: translateY(-1px);
+  }
+  .btn-primary-indigo:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 
   .btn-primary-teal {
-    background: linear-gradient(to right, #00668a, #004d6a);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #0291bc 0%, #004d6a 100%);
     color: white;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 500;
     transition: all 0.2s ease-in-out;
+    box-shadow:
+      0 2px 8px rgba(0, 102, 138, 0.25),
+      0 1px 2px rgba(0, 102, 138, 0.12);
   }
-  .btn-primary-teal:hover {
-    opacity: 0.92;
-    box-shadow: 0 4px 14px 0 rgba(0, 77, 106, 0.3);
+  .btn-primary-teal:hover:not(:disabled) {
+    opacity: 0.93;
+    box-shadow:
+      0 6px 20px rgba(0, 77, 106, 0.38),
+      0 2px 6px rgba(0, 77, 106, 0.18);
+    transform: translateY(-1px);
+  }
+  .btn-primary-teal:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }
 

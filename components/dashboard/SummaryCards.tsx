@@ -50,7 +50,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
       {/* Active SKUs */}
-      <div className="bg-white rounded-2xl border border-outline-variant shadow-sm p-7 flex flex-col gap-5">
+      <div className="glass-panel p-7 flex flex-col gap-5">
         <div className="flex items-start justify-between">
           <p className="font-label-md text-label-md text-on-surface-variant">
             Active SKUs
@@ -74,7 +74,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
       {/* SKUs Needing Reorder */}
       <Link
         href={`/dashboard/${clientSlug}/reorder`}
-        className="bg-white rounded-2xl border border-outline-variant shadow-sm p-7 flex flex-col gap-5 hover:shadow-md transition-all duration-200 group cursor-pointer"
+        className="glass-panel p-7 flex flex-col gap-5 hover:shadow-[0_8px_32px_-4px_rgba(17,28,45,0.14),0_2px_8px_rgba(17,28,45,0.07)] hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer"
       >
         <div className="flex items-start justify-between">
           <p className="font-label-md text-label-md text-on-surface-variant">
@@ -102,7 +102,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
       </Link>
 
       {/* Units Inbound */}
-      <div className="bg-white rounded-2xl border border-outline-variant shadow-sm p-7 flex flex-col gap-5">
+      <div className="glass-panel p-7 flex flex-col gap-5">
         <div className="flex items-start justify-between">
           <p className="font-label-md text-label-md text-on-surface-variant">
             Units Inbound
@@ -124,7 +124,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
       </div>
 
       {/* Inventory Health */}
-      <div className="bg-white rounded-2xl border border-outline-variant shadow-sm p-7 flex flex-col gap-5">
+      <div className="glass-panel p-7 flex flex-col gap-5">
         <div className="flex items-start justify-between">
           <p className="font-label-md text-label-md text-on-surface-variant">
             Inventory Health
@@ -140,7 +140,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
             {stats.healthScore}%
           </p>
           {/* Mini health bar */}
-          <div className="mt-3 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+          <div className="mt-3 w-full bg-white/50 border border-white/40 h-1.5 rounded-full overflow-hidden">
             <div
               className={`${healthBarColor} h-full rounded-full transition-all`}
               style={{ width: `${stats.healthScore}%` }}

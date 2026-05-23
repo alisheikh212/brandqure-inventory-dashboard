@@ -28,19 +28,19 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/25 backdrop-blur-md p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg bg-surface-container-lowest rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border border-outline-variant/30">
+      <div className="w-full max-w-lg glass-modal flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/40">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/35">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-tertiary-fixed-variant">
+              <div className="w-8 h-8 rounded-xl bg-white/60 border border-white/50 shadow-sm flex items-center justify-center text-on-tertiary-fixed-variant">
                 <span className="material-symbols-outlined text-[20px]">
                   {icon}
                 </span>
@@ -54,7 +54,7 @@ export default function Modal({
             type="button"
             aria-label="Close modal"
             onClick={onClose}
-            className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors focus:outline-none focus:ring-2 focus:ring-on-tertiary-fixed-variant/50"
+            className="p-2 rounded-full text-on-surface-variant hover:bg-white/60 hover:text-on-surface transition-all focus:outline-none focus:ring-2 focus:ring-on-tertiary-fixed-variant/40"
           >
             <span className="material-symbols-outlined text-[20px]">
               close
@@ -66,7 +66,7 @@ export default function Modal({
         <div className="px-6 py-6 flex flex-col gap-5">{children}</div>
 
         {/* Footer */}
-        <div className="px-6 py-5 border-t border-outline-variant/40 bg-surface-bright/50 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <div className="px-6 py-5 border-t border-white/35 bg-white/25 flex flex-col-reverse sm:flex-row justify-end gap-3">
           {footer}
         </div>
       </div>

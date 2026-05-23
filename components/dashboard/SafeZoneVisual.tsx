@@ -13,7 +13,7 @@ export default function SafeZoneVisual({
 
       <div className="flex-1 flex flex-col items-center justify-center">
         {/* CSS ring gauge matching Stitch design */}
-        <div className="relative w-44 h-44 rounded-full border-8 border-surface-container flex items-center justify-center">
+        <div className="relative w-44 h-44 rounded-full border-8 border-white/40 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(17,28,45,0.08)]">
           <div className="absolute inset-0 rounded-full border-8 border-secondary-container border-t-transparent border-r-transparent rotate-45" />
           <div className="text-center z-10">
             <p className="font-display-lg text-display-lg text-primary leading-none">
@@ -49,7 +49,7 @@ export default function SafeZoneVisual({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden mt-3">
+          <div className="w-full bg-white/50 border border-white/40 rounded-full h-1.5 overflow-hidden mt-3">
             <div
               className="h-full rounded-full bg-gradient-to-r from-error via-secondary-container to-surface-container-high"
               style={{ width: "100%" }}

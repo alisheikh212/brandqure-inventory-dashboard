@@ -31,9 +31,9 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
   const isEmpty = !hasSheetInbound && !hasOrders;
 
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant shadow-sm lg:col-span-1 overflow-hidden flex flex-col h-[480px]">
+    <div className="glass-panel lg:col-span-1 overflow-hidden flex flex-col h-[480px]">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-outline-variant flex items-center gap-2">
+      <div className="px-5 py-4 border-b border-white/40 flex items-center gap-2">
         <span className="material-symbols-outlined text-[20px] text-primary">
           move_to_inbox
         </span>
@@ -57,12 +57,12 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
           {/* Tracked Orders (Supabase) — shown first, with countdown */}
           {hasOrders && (
             <div>
-              <div className="px-5 py-2 bg-surface-container/50 border-b border-outline-variant">
+              <div className="px-5 py-2 bg-white/30 border-b border-white/35">
                 <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Tracked Orders
                 </p>
               </div>
-              <ul className="divide-y divide-outline-variant">
+              <ul className="divide-y divide-outline-variant/25">
                 {inboundOrders.map((order) => {
                   const days = daysFromToday(order.expectedArrivalDate);
                   const isOverdue = days < 0;
@@ -119,12 +119,12 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
           {/* Sheet Inbound (Google Sheets col F) — no dates */}
           {hasSheetInbound && (
             <div>
-              <div className="px-5 py-2 bg-surface-container/50 border-b border-outline-variant">
+              <div className="px-5 py-2 bg-white/30 border-b border-white/35">
                 <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Sheet Inbound
                 </p>
               </div>
-              <ul className="divide-y divide-outline-variant">
+              <ul className="divide-y divide-outline-variant/25">
                 {sheetInbound.map((row) => {
                   const pillClass =
                     MARKETPLACE_COLORS[row.marketplace] ??
@@ -158,7 +158,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
       )}
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-outline-variant">
+      <div className="px-5 py-3 border-t border-white/40">
         <p className="font-label-sm text-label-sm text-on-surface-variant">
           {hasOrders && !hasSheetInbound
             ? "Tracked Orders from app · Sheet Inbound from Google Sheets"

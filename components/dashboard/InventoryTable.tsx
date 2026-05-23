@@ -54,15 +54,15 @@ export default function InventoryTable({
       : rows.filter((r) => r.marketplace === activeMarketplace);
 
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant shadow-sm lg:col-span-3 overflow-hidden flex flex-col" style={{ height: 480 }}>
+    <div className="glass-panel lg:col-span-3 overflow-hidden flex flex-col" style={{ height: 480 }}>
       {/* Card header */}
-      <div className="px-7 py-5 border-b border-outline-variant/50 flex justify-between items-center bg-white">
+      <div className="px-7 py-5 border-b border-white/40 flex justify-between items-center bg-white/30 backdrop-blur-sm">
         <div>
           <h3 className="font-headline-md text-headline-md text-on-surface">
             SKU Health Monitor
           </h3>
         </div>
-        <span className="px-3 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+        <span className="px-3 py-1 rounded-full bg-white/60 border border-white/50 font-label-sm text-label-sm text-on-surface-variant shadow-sm">
           {filtered.length} SKUs
         </span>
       </div>
@@ -70,7 +70,7 @@ export default function InventoryTable({
       {/* Scrollable table */}
       <div className="overflow-auto flex-1">
         <table className="w-full text-left border-collapse min-w-[820px]">
-          <thead className="bg-surface-container-lowest sticky top-0 z-10">
+          <thead className="bg-white/60 backdrop-blur-sm sticky top-0 z-10">
             <tr>
               {[
                 "SKU / Product",
@@ -84,14 +84,14 @@ export default function InventoryTable({
               ].map((col) => (
                 <th
                   key={col}
-                  className="px-5 py-3.5 font-label-sm text-label-sm text-outline uppercase tracking-widest border-b border-outline-variant/40 whitespace-nowrap"
+                  className="px-5 py-3.5 font-label-sm text-label-sm text-on-surface-variant/70 uppercase tracking-widest border-b border-white/40 whitespace-nowrap"
                 >
                   {col}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white">
+          <tbody className="bg-transparent">
             {filtered.length === 0 ? (
               <tr>
                 <td
@@ -108,8 +108,8 @@ export default function InventoryTable({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-outline-variant/30 transition-colors hover:bg-[#f8f9fc] ${
-                      isUrgent ? "bg-[#fff8f8]" : ""
+                    className={`border-b border-outline-variant/15 transition-colors hover:bg-white/55 ${
+                      isUrgent ? "bg-red-50/50" : ""
                     }`}
                   >
                     {/* SKU / Product */}
@@ -127,7 +127,7 @@ export default function InventoryTable({
 
                     {/* Marketplace */}
                     <td className="px-5 py-4">
-                      <span className="px-2.5 py-1 rounded-full border border-outline-variant/60 bg-surface-container-low font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full border border-outline-variant/30 bg-white/60 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap shadow-[0_1px_3px_rgba(17,28,45,0.06)]">
                         {row.marketplace}
                       </span>
                     </td>

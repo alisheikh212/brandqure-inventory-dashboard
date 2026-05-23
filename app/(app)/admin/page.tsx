@@ -35,7 +35,7 @@ export default async function AdminPage() {
         </div>
         <Link
           href="/admin/clients/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-on-tertiary-fixed-variant to-primary text-white font-label-md text-label-md shadow-md hover:shadow-lg hover:opacity-95 hover:-translate-y-px transition-all duration-150 flex-shrink-0"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           Add Client
@@ -51,7 +51,7 @@ export default async function AdminPage() {
           type="text"
           placeholder="Search clients..."
           readOnly
-          className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-white font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          className="w-full pl-10 pr-4 py-2 border border-white/60 rounded-xl bg-white/65 backdrop-blur-sm font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all shadow-sm"
         />
       </div>
 
@@ -60,7 +60,7 @@ export default async function AdminPage() {
         {clients.map((client) => (
           <div
             key={client.clientSlug}
-            className="bg-white rounded-xl border border-outline-variant card-shadow flex flex-col relative overflow-hidden"
+            className="glass-panel flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_-4px_rgba(17,28,45,0.14)] hover:-translate-y-0.5 transition-all duration-200"
           >
             {/* Accent bar top */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-on-tertiary-fixed-variant to-secondary-container" />
@@ -73,7 +73,7 @@ export default async function AdminPage() {
               {/* Client identity */}
               <div className="flex items-start justify-between mb-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-white/60 border border-white/50 shadow-sm flex items-center justify-center flex-shrink-0">
                     <span className="font-headline-md text-headline-md text-on-surface-variant">
                       {client.logoInitial}
                     </span>
@@ -93,7 +93,7 @@ export default async function AdminPage() {
               </div>
 
               {/* Static config stats */}
-              <div className="grid grid-cols-2 gap-4 border-t border-surface-variant pt-4">
+              <div className="grid grid-cols-2 gap-4 border-t border-white/40 pt-4">
                 <div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                     Default Lead Time
@@ -114,17 +114,17 @@ export default async function AdminPage() {
             </Link>
 
             {/* Admin action strip */}
-            <div className="flex items-center gap-2 px-6 py-3 border-t border-surface-variant bg-surface-container/40">
+            <div className="flex items-center gap-2 px-6 py-3 border-t border-white/35 bg-white/20">
               <Link
                 href={`/admin/clients/${client.clientSlug}/edit`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant font-label-sm text-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/60 bg-white/50 font-label-sm text-label-sm text-on-surface-variant hover:border-primary/40 hover:text-primary hover:bg-white/70 backdrop-blur-sm transition-all"
               >
                 <span className="material-symbols-outlined text-[14px]">edit</span>
                 Edit
               </Link>
               <Link
                 href={`/admin/clients/${client.clientSlug}/users/new`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant font-label-sm text-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/60 bg-white/50 font-label-sm text-label-sm text-on-surface-variant hover:border-primary/40 hover:text-primary hover:bg-white/70 backdrop-blur-sm transition-all"
               >
                 <span className="material-symbols-outlined text-[14px]">person_add</span>
                 Create Login
@@ -135,7 +135,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 pt-6 border-t border-outline-variant">
+      <footer className="mt-16 pt-6 border-t border-white/40">
         <div className="flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             Powered by BrandQure © 2026
