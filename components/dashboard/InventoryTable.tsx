@@ -16,7 +16,7 @@ function DaysUntilOOS({ row }: { row: InventoryRow }) {
 
   if (days === 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container font-label-sm text-label-sm text-error font-semibold">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-error/30 bg-error-container/60 font-label-sm text-label-sm text-error font-semibold backdrop-blur-sm">
         Out of Stock
       </span>
     );
@@ -84,7 +84,7 @@ export default function InventoryTable({
               ].map((col) => (
                 <th
                   key={col}
-                  className="px-5 py-3.5 font-label-sm text-label-sm text-on-surface-variant/70 uppercase tracking-widest border-b border-white/40 whitespace-nowrap"
+                  className="px-5 py-3.5 font-label-sm text-label-sm text-on-surface-variant/85 uppercase tracking-widest border-b border-white/40 whitespace-nowrap"
                 >
                   {col}
                 </th>
@@ -108,8 +108,8 @@ export default function InventoryTable({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-outline-variant/15 transition-colors hover:bg-white/55 ${
-                      isUrgent ? "bg-red-50/50" : ""
+                    className={`border-b border-outline-variant/20 transition-colors hover:bg-white/60 ${
+                      isUrgent ? "bg-red-50/55" : ""
                     }`}
                   >
                     {/* SKU / Product */}
@@ -120,7 +120,7 @@ export default function InventoryTable({
                       <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5 max-w-[160px] truncate">
                         {row.productName}
                       </p>
-                      <p className="font-label-sm text-label-sm text-outline mt-0.5">
+                      <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-0.5 font-mono text-[11px]">
                         {row.asin}
                       </p>
                     </td>

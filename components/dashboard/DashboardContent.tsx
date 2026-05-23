@@ -56,84 +56,94 @@ export default function DashboardContent({
   return (
     <>
       <div className="pb-16 px-4 md:px-8 max-w-[1440px] mx-auto flex flex-col gap-6 pt-6">
-        {/* Page header + marketplace filter */}
+        {/* Page header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Title + status */}
           <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">
+            <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
               {client.name}
             </h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Inventory Overview &amp; Health Status
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="font-body-md text-body-md text-on-surface-variant">
+                Inventory Overview
+              </p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-label-sm border ${
+                client.stockStatus === "Optimal" || client.stockStatus === "Good"
+                  ? "border-secondary/25 bg-secondary-fixed/50 text-on-secondary-fixed"
+                  : client.stockStatus === "Review"
+                  ? "border-[#f59e0b]/30 bg-[#fffbeb]/70 text-[#b45309]"
+                  : "border-error/30 bg-error-container/50 text-on-error-container"
+              }`}>
+                {client.stockStatus}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Marketplace filters — show all except "All" as toggles */}
-            {MARKETPLACES.filter((m) => m !== "All").map((mp) => (
-              <button
-                key={mp}
-                type="button"
-                onClick={() =>
-                  setActiveMarketplace(activeMarketplace === mp ? "All" : mp)
-                }
-                className={`px-4 py-2 rounded-full font-label-md text-label-md transition-all duration-150 shadow-sm ${
-                  activeMarketplace === mp
-                    ? "border border-secondary-container/70 bg-secondary-fixed/60 text-primary font-semibold backdrop-blur-sm shadow-md"
-                    : "border border-white/65 bg-white/60 text-on-surface hover:bg-white/80 backdrop-blur-sm"
-                }`}
-              >
-                {mp}
-              </button>
-            ))}
+          {/* Controls: marketplace filters | divider | action buttons */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Marketplace filter pills */}
+            <div className="flex items-center gap-1.5">
+              {MARKETPLACES.filter((m) => m !== "All").map((mp) => (
+                <button
+                  key={mp}
+                  type="button"
+                  onClick={() =>
+                    setActiveMarketplace(activeMarketplace === mp ? "All" : mp)
+                  }
+                  className={`px-3 py-1.5 rounded-full font-label-sm text-label-sm transition-all duration-150 ${
+                    activeMarketplace === mp
+                      ? "border border-secondary-container/70 bg-secondary-fixed/65 text-primary font-semibold backdrop-blur-sm shadow-sm"
+                      : "border border-white/55 bg-white/50 text-on-surface-variant hover:bg-white/75 hover:text-on-surface backdrop-blur-sm"
+                  }`}
+                >
+                  {mp}
+                </button>
+              ))}
+            </div>
 
-            {/* Add Inbound Order — visible to all authenticated users */}
+            {/* Vertical divider */}
+            <div className="hidden md:block w-px h-6 bg-outline-variant/30 rounded-full" />
+
+            {/* Primary: Add Inbound Order */}
             <button
               type="button"
               onClick={() => setModal({ type: "add-inbound" })}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-on-tertiary-fixed-variant to-primary text-white font-label-md text-label-md shadow-md hover:shadow-lg hover:opacity-95 hover:-translate-y-px transition-all duration-150"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                add
-              </span>
+              <span className="material-symbols-outlined text-[17px]">add</span>
               Add Inbound Order
             </button>
 
-            {/* Manual sheet refresh */}
+            {/* Secondary: Refresh */}
             <button
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/55 bg-white/50 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/75 hover:text-on-surface backdrop-blur-sm shadow-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span
-                className={`material-symbols-outlined text-[18px] ${isRefreshing ? "animate-spin" : ""}`}
-              >
+              <span className={`material-symbols-outlined text-[16px] ${isRefreshing ? "animate-spin" : ""}`}>
                 sync
               </span>
-              {isRefreshing ? "Refreshing…" : "Refresh Sheet Data"}
+              {isRefreshing ? "Refreshing…" : "Refresh"}
             </button>
 
-            {/* Reorder planning link */}
-            <Link
-              href={`/dashboard/${client.slug}/reorder`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                shopping_cart
-              </span>
-              Reorder
-            </Link>
-
-            {/* Print report link */}
-            <Link
-              href={`/dashboard/${client.slug}/print`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/65 bg-white/60 text-on-surface font-label-md text-label-md hover:bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-150"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                print
-              </span>
-              Report
-            </Link>
+            {/* Tertiary: Reorder + Report */}
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/dashboard/${client.slug}/reorder`}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/45 bg-white/35 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/60 hover:text-on-surface backdrop-blur-sm transition-all duration-150"
+              >
+                <span className="material-symbols-outlined text-[15px]">shopping_cart</span>
+                Reorder
+              </Link>
+              <Link
+                href={`/dashboard/${client.slug}/print`}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/45 bg-white/35 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/60 hover:text-on-surface backdrop-blur-sm transition-all duration-150"
+              >
+                <span className="material-symbols-outlined text-[15px]">print</span>
+                Report
+              </Link>
+            </div>
           </div>
         </div>
 

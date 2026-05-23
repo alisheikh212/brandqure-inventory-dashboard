@@ -16,7 +16,7 @@ function IconBubble({
   iconClass: string;
 }) {
   return (
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${bgClass}`}>
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border border-white/40 shadow-sm ${bgClass}`}>
       <span className={`material-symbols-outlined text-[20px] ${iconClass}`}>
         {icon}
       </span>
@@ -57,7 +57,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="inventory"
-            bgClass="bg-surface-container-high"
+            bgClass="bg-white/55"
             iconClass="text-on-surface-variant"
           />
         </div>
@@ -65,7 +65,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           <p className="font-display-lg text-display-lg text-on-surface leading-none">
             {stats.totalActiveSKUs.toLocaleString()}
           </p>
-          <span className="inline-block mt-3 px-2.5 py-1 rounded-full bg-secondary-fixed font-label-sm text-label-sm text-on-secondary-fixed">
+          <span className="inline-block mt-3 px-2.5 py-1 rounded-full border border-secondary/20 bg-secondary-fixed/55 backdrop-blur-sm font-label-sm text-label-sm text-on-secondary-fixed">
             {stats.skuTrend}
           </span>
         </div>
@@ -82,7 +82,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="shopping_cart"
-            bgClass="bg-[#fff8ed]"
+            bgClass="bg-amber-50/70"
             iconClass="text-[#b45309]"
           />
         </div>
@@ -109,7 +109,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="local_shipping"
-            bgClass="bg-secondary-fixed"
+            bgClass="bg-secondary-fixed/65"
             iconClass="text-on-secondary-fixed"
           />
         </div>
@@ -131,7 +131,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="verified"
-            bgClass={stats.healthScore >= 60 ? "bg-secondary-fixed" : "bg-error-container"}
+            bgClass={stats.healthScore >= 60 ? "bg-secondary-fixed/65" : "bg-error-container/60"}
             iconClass={stats.healthScore >= 60 ? "text-on-secondary-fixed" : "text-error"}
           />
         </div>

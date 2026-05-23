@@ -141,7 +141,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-outline-variant bg-transparent text-on-surface font-label-md text-label-md transition-all hover:bg-surface-container-highest focus:outline-none focus:ring-2 focus:ring-outline/50"
+            className="btn-ghost-glass focus:outline-none focus:ring-2 focus:ring-outline/30"
           >
             Cancel
           </button>
@@ -163,7 +163,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
     >
       <div className="flex flex-col gap-4 -mx-6 px-6 overflow-x-auto">
         {error && (
-          <div className="flex items-start gap-3 p-3 rounded-xl border border-error bg-error-container/30 text-error">
+          <div className="flex items-start gap-3 p-3 rounded-xl border border-error/40 bg-error-container/40 backdrop-blur-sm text-error">
             <span className="material-symbols-outlined text-[18px] mt-0.5 flex-shrink-0">error</span>
             <p className="font-body-sm text-body-sm">{error}</p>
           </div>
@@ -208,7 +208,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
                 value={row.productName}
                 readOnly
                 placeholder="Auto-filled"
-                className="brand-input bg-surface-container text-on-surface-variant text-[13px] cursor-default"
+                className="brand-input text-on-surface-variant/75 text-[13px] cursor-default"
                 tabIndex={-1}
               />
 
@@ -270,7 +270,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
           <button
             type="button"
             onClick={addRow}
-            className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-dashed border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-primary hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-dashed border-outline-variant/45 bg-white/25 text-on-surface-variant font-label-sm text-label-sm hover:border-primary/50 hover:text-primary hover:bg-white/45 backdrop-blur-sm transition-all"
           >
             <span className="material-symbols-outlined text-[16px]">add</span>
             Add Another Row
