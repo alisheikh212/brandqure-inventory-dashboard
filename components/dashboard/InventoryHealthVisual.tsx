@@ -1,78 +1,90 @@
-// CSS-only bar chart placeholder matching the Stitch design reference
-const BARS = [
-  { height: "33%", active: false },
-  { height: "50%", active: false },
-  { height: "40%", active: false },
-  { height: "66%", active: false },
-  { height: "60%", active: false },
-  { height: "80%", active: false },
-  { height: "100%", active: true },
-];
+import type { InventoryRow } from "@/lib/mock-data";
 
-const MONTHS = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+interface InventoryHealthVisualProps {
+  inventory: InventoryRow[];
+}
 
-export default function InventoryHealthVisual() {
+const TOP_N = 8;
+
+export default function InventoryHealthVisual({
+  inventory,
+}: InventoryHealthVisualProps) {
+  // Top N SKUs by FBA Available, descending
+  const top = [...inventory]
+    .sort((a, b) => b.fbaAvailable - a.fbaAvailable)
+    .slice(0, TOP_N);
+
+  const maxFba = top[0]?.fbaAvailable ?? 1;
+  const totalSKUs = inventory.length;
+
   return (
     <div className="data-card p-6 lg:col-span-2 flex flex-col h-[360px]">
       <div className="flex justify-between items-center mb-5">
-        <h3 className="font-headline-md text-headline-md text-on-surface tracking-tight">
-          Inventory Health Trend
-        </h3>
+        <div>
+          <h3 className="font-headline-md text-headline-md text-on-surface tracking-tight">
+            FBA Stock by SKU
+          </h3>
+          <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-0.5">
+            Top {Math.min(TOP_N, top.length)} of {totalSKUs} SKUs by FBA units
+          </p>
+        </div>
         <span className="px-2.5 py-1 rounded-full border border-white/50 bg-white/50 backdrop-blur-sm font-label-sm text-label-sm text-on-surface-variant shadow-sm">
-          Last 7 months
+          Live data
         </span>
       </div>
 
-      <div className="flex-1 flex flex-col">
-        {/* Chart area */}
-        <div className="flex-1 relative bg-white/30 border border-white/45 rounded-xl overflow-hidden shadow-[inset_0_2px_8px_rgba(17,28,45,0.04)]">
-          <div className="absolute inset-0 bg-gradient-to-b from-secondary-fixed/15 to-transparent pointer-events-none" />
-          {/* Y-axis lines */}
-          {["100%", "75%", "50%", "25%"].map((pct) => (
-            <div
-              key={pct}
-              className="absolute left-0 right-0 border-t border-outline-variant/20 flex items-start"
-              style={{ top: `calc(100% - ${pct})`, height: 0 }}
-            >
-              <span className="font-label-sm text-label-sm text-on-surface-variant/55 pl-2 -mt-3 text-[10px]">
-                {pct}
-              </span>
-            </div>
-          ))}
+      {top.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="font-label-md text-label-md text-on-surface-variant/60">
+            No inventory data available.
+          </p>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col justify-end gap-2 overflow-hidden">
+          {top.map((row) => {
+            const pct = maxFba > 0 ? (row.fbaAvailable / maxFba) * 100 : 0;
+            const isLow = row.fbaAvailable < 50;
+            return (
+              <div key={row.id} className="flex items-center gap-3 group">
+                {/* SKU label */}
+                <div className="w-[90px] flex-shrink-0 text-right">
+                  <span
+                    className="font-label-sm text-label-sm text-on-surface-variant/75 truncate block text-[11px] font-mono"
+                    title={`${row.sku} — ${row.productName}`}
+                  >
+                    {row.sku}
+                  </span>
+                </div>
 
-          {/* Bars */}
-          <div className="absolute inset-x-6 bottom-0 top-4 flex items-end justify-between gap-2">
-            {BARS.map((bar, i) => (
-              <div
-                key={i}
-                className="flex-1 flex flex-col justify-end"
-                style={{ height: "100%" }}
-              >
-                <div
-                  className={`w-full rounded-t-md transition-all ${
-                    bar.active
-                      ? "bg-secondary-container/55 border-t-2 border-secondary-container shadow-[0_-2px_8px_rgba(64,194,253,0.25)]"
-                      : "bg-white/55 border border-white/60 border-b-0"
-                  }`}
-                  style={{ height: bar.height }}
-                />
+                {/* Bar */}
+                <div className="flex-1 h-6 bg-white/30 border border-white/40 rounded-md overflow-hidden relative shadow-[inset_0_1px_3px_rgba(17,28,45,0.05)]">
+                  <div
+                    className={`h-full rounded-md transition-all duration-500 ${
+                      isLow
+                        ? "bg-gradient-to-r from-error/60 to-error/40"
+                        : "bg-gradient-to-r from-secondary-container/70 to-secondary-container/45"
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                  {/* Value label inside bar if wide enough, otherwise outside */}
+                  {pct > 20 && (
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 font-label-sm text-label-sm text-on-surface/80 text-[11px] font-semibold tabular-nums">
+                      {row.fbaAvailable.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+
+                {/* Value label when bar is too narrow */}
+                {pct <= 20 && (
+                  <span className="w-[52px] flex-shrink-0 font-label-sm text-label-sm text-on-surface-variant/70 text-[11px] tabular-nums">
+                    {row.fbaAvailable.toLocaleString()}
+                  </span>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-
-        {/* X-axis labels */}
-        <div className="flex justify-between mt-2.5 px-1">
-          {MONTHS.map((m) => (
-            <span
-              key={m}
-              className="font-label-sm text-label-sm text-on-surface-variant/70 text-center flex-1 text-[11px]"
-            >
-              {m}
-            </span>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,15 @@ const INVENTORY_BADGE_STYLES: Record<InventoryStatus, string> = {
     "border border-outline-variant/40 bg-surface-variant/45 text-on-surface-variant backdrop-blur-sm",
 };
 
+// Display-only label overrides — does not affect the InventoryStatus type or any logic
+const INVENTORY_DISPLAY_LABELS: Record<InventoryStatus, string> = {
+  "Critical Low": "Critical Low",
+  "Out of Stock": "Out of Stock",
+  "Low Stock": "Low Stock",
+  Healthy: "Healthy",
+  Overstock: "Sufficient Stock",
+};
+
 const STOCK_BADGE_STYLES: Record<StockStatus, string> = {
   Optimal: "border border-secondary/25 bg-secondary-fixed/55 text-on-secondary-fixed backdrop-blur-sm",
   Good: "border border-secondary/20 bg-secondary-fixed/45 text-on-secondary-fixed backdrop-blur-sm",
@@ -29,7 +38,7 @@ export function InventoryStatusBadge({ status }: InventoryBadgeProps) {
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm whitespace-nowrap ${INVENTORY_BADGE_STYLES[status]}`}
     >
-      {status}
+      {INVENTORY_DISPLAY_LABELS[status]}
     </span>
   );
 }

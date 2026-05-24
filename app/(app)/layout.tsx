@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
+import SidebarShell from "@/components/layout/SidebarShell";
 
 export default async function AppLayout({
   children,
@@ -26,11 +25,9 @@ export default async function AppLayout({
 
   return (
     <div className="app-bg">
-      <Sidebar role={role} name={name} initials={initials} />
-      <Header initials={initials} />
-      <div className="md:ml-[280px] pt-16 min-h-screen flex flex-col print:ml-0 print:pt-0">
+      <SidebarShell role={role} name={name} initials={initials}>
         {children}
-      </div>
+      </SidebarShell>
     </div>
   );
 }

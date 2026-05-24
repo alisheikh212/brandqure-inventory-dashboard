@@ -1,12 +1,31 @@
 interface HeaderProps {
   initials: string;
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-export default function Header({ initials }: HeaderProps) {
+export default function Header({ initials, collapsed, onToggle }: HeaderProps) {
   return (
-    <header className="glass-header print-hidden fixed top-0 right-0 w-full md:w-[calc(100%-280px)] h-16 z-40 flex justify-between items-center px-4 md:px-8">
-      {/* Search */}
-      <div className="flex items-center flex-1">
+    <header
+      className={`glass-header print-hidden fixed top-0 right-0 h-16 z-40 flex justify-between items-center px-4 md:px-6 transition-[width] duration-300 ease-in-out w-full ${
+        collapsed ? "md:w-[calc(100%-72px)]" : "md:w-[calc(100%-280px)]"
+      }`}
+    >
+      {/* Left: toggle + search */}
+      <div className="flex items-center gap-3 flex-1">
+        {/* Sidebar toggle — desktop only */}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hidden md:flex p-2 text-on-surface-variant hover:bg-white/60 hover:shadow-sm rounded-full transition-all flex-shrink-0"
+        >
+          <span className="material-symbols-outlined text-[22px]">
+            {collapsed ? "menu_open" : "menu"}
+          </span>
+        </button>
+
+        {/* Search bar */}
         <div className="relative w-full max-w-md hidden md:block">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
             search

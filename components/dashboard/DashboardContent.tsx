@@ -152,7 +152,7 @@ export default function DashboardContent({
 
         {/* Bento: Health trend + Safe zone */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <InventoryHealthVisual />
+          <InventoryHealthVisual inventory={inventory} />
           <SafeZoneVisual percentage={client.stockHealth} />
         </div>
 

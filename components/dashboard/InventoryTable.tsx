@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import type { InventoryRow, MarketplaceFilter } from "@/lib/mock-data";
 import { InventoryStatusBadge } from "@/components/ui/StatusBadge";
 import { stockoutInDays, getReorderStatus } from "@/lib/reorder";
@@ -11,6 +12,10 @@ interface InventoryTableProps {
   onUpdate3PL: (row: InventoryRow) => void;
 }
 
+type SortOption = "oos-asc" | "fba-desc" | "fba-asc" | "sku-az";
+type StatusFilter = "All" | "Reorder Now" | "Reorder Soon" | "OK" | "Sufficient Stock";
+
+/** Display-safe OOS days — caps at 90, treats Infinity as 90+. */
 function DaysUntilOOS({ row }: { row: InventoryRow }) {
   const days = stockoutInDays(row);
 
@@ -18,6 +23,13 @@ function DaysUntilOOS({ row }: { row: InventoryRow }) {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-error/30 bg-error-container/60 font-label-sm text-label-sm text-error font-semibold backdrop-blur-sm">
         Out of Stock
+      </span>
+    );
+  }
+  if (!isFinite(days) || days > 90) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-outline-variant/30 bg-white/50 font-label-sm text-label-sm text-on-surface-variant backdrop-blur-sm">
+        90+ Days
       </span>
     );
   }
@@ -48,23 +60,130 @@ export default function InventoryTable({
   onAddUnits,
   onUpdate3PL,
 }: InventoryTableProps) {
-  const filtered =
-    activeMarketplace === "All"
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [sortBy, setSortBy] = useState<SortOption>("oos-asc");
+
+  const processed = useMemo(() => {
+    // 1. Marketplace filter (from parent prop)
+    let result = activeMarketplace === "All"
       ? rows
       : rows.filter((r) => r.marketplace === activeMarketplace);
 
+    // 2. Search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (r) =>
+          r.sku.toLowerCase().includes(q) ||
+          r.productName.toLowerCase().includes(q)
+      );
+    }
+
+    // 3. Status filter
+    if (statusFilter !== "All") {
+      result = result.filter((r) => {
+        const rs = getReorderStatus(r);
+        if (statusFilter === "Sufficient Stock") return rs === "Overstock";
+        return rs === statusFilter;
+      });
+    }
+
+    // 4. Sort
+    const sorted = [...result];
+    switch (sortBy) {
+      case "oos-asc":
+        // Infinity (90+) sorts last — correct natively in JS
+        sorted.sort((a, b) => stockoutInDays(a) - stockoutInDays(b));
+        break;
+      case "fba-desc":
+        sorted.sort((a, b) => b.fbaAvailable - a.fbaAvailable);
+        break;
+      case "fba-asc":
+        sorted.sort((a, b) => a.fbaAvailable - b.fbaAvailable);
+        break;
+      case "sku-az":
+        sorted.sort((a, b) => a.sku.localeCompare(b.sku));
+        break;
+    }
+    return sorted;
+  }, [rows, activeMarketplace, search, statusFilter, sortBy]);
+
   return (
-    <div className="glass-panel lg:col-span-3 overflow-hidden flex flex-col" style={{ height: 480 }}>
+    <div className="glass-panel lg:col-span-3 overflow-hidden flex flex-col" style={{ height: 520 }}>
       {/* Card header */}
-      <div className="px-7 py-5 border-b border-white/40 flex justify-between items-center bg-white/30 backdrop-blur-sm">
-        <div>
+      <div className="px-6 pt-5 pb-4 border-b border-white/40 bg-white/30 backdrop-blur-sm flex-shrink-0">
+        <div className="flex justify-between items-center mb-3">
           <h3 className="font-headline-md text-headline-md text-on-surface">
             SKU Health Monitor
           </h3>
+          <span className="px-3 py-1 rounded-full bg-white/60 border border-white/50 font-label-sm text-label-sm text-on-surface-variant shadow-sm">
+            {processed.length} SKUs
+          </span>
         </div>
-        <span className="px-3 py-1 rounded-full bg-white/60 border border-white/50 font-label-sm text-label-sm text-on-surface-variant shadow-sm">
-          {filtered.length} SKUs
-        </span>
+
+        {/* Controls row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[160px] max-w-[240px]">
+            <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[16px] pointer-events-none">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search SKU or product…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm"
+            />
+          </div>
+
+          {/* Status filter */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Reorder Now">Reorder Now</option>
+              <option value="Reorder Soon">Reorder Soon</option>
+              <option value="OK">OK</option>
+              <option value="Sufficient Stock">Sufficient Stock</option>
+            </select>
+            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[14px] pointer-events-none">
+              expand_more
+            </span>
+          </div>
+
+          {/* Sort */}
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
+            >
+              <option value="oos-asc">Closest to OOS</option>
+              <option value="fba-desc">Highest FBA Stock</option>
+              <option value="fba-asc">Lowest FBA Stock</option>
+              <option value="sku-az">SKU A–Z</option>
+            </select>
+            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[14px] pointer-events-none">
+              expand_more
+            </span>
+          </div>
+
+          {/* Clear filters */}
+          {(search || statusFilter !== "All" || sortBy !== "oos-asc") && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setStatusFilter("All"); setSortBy("oos-asc"); }}
+              className="px-2.5 py-1.5 text-[12px] text-on-surface-variant/70 hover:text-on-surface border border-white/40 bg-white/40 hover:bg-white/60 rounded-lg backdrop-blur-sm transition-all"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable table */}
@@ -92,17 +211,17 @@ export default function InventoryTable({
             </tr>
           </thead>
           <tbody className="bg-transparent">
-            {filtered.length === 0 ? (
+            {processed.length === 0 ? (
               <tr>
                 <td
                   colSpan={8}
                   className="px-5 py-10 text-center font-label-md text-label-md text-on-surface-variant"
                 >
-                  No SKUs for this marketplace filter.
+                  No SKUs match your filters.
                 </td>
               </tr>
             ) : (
-              filtered.map((row) => {
+              processed.map((row) => {
                 const reorderStatus = getReorderStatus(row);
                 const isUrgent = reorderStatus === "Reorder Now";
                 return (
