@@ -5,6 +5,7 @@
 // ============================================================
 
 import type { InventoryRow, InventoryStatus, SummaryStats } from "./mock-data";
+import type { InboundOrder } from "./types";
 
 export type ReorderStatus = "Reorder Now" | "Reorder Soon" | "OK" | "Overstock";
 
@@ -28,21 +29,66 @@ export function totalCoverageDays(row: InventoryRow): number {
 }
 
 /**
+ * An app-created inbound order is "active" — and therefore subtracted from the
+ * reorder recommendation — while today is on or before expectedArrivalDate + 10
+ * calendar days. The 10-day buffer accounts for the delay between physical receipt
+ * and FBA visibility in the Google Sheet. After the buffer, units should already
+ * appear in col F (sheet inbound) or FBA available; continuing to subtract the app
+ * order would risk double-counting.
+ */
+export function isActiveInboundOrder(order: InboundOrder): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const arrival = new Date(order.expectedArrivalDate);
+  arrival.setHours(0, 0, 0, 0);
+  const bufferEnd = new Date(arrival);
+  bufferEnd.setDate(bufferEnd.getDate() + 10);
+  return today <= bufferEnd;
+}
+
+/**
+ * Build a SKU → total active app-inbound quantity map from a list of inbound orders.
+ * Only orders where isActiveInboundOrder() is true are included.
+ * Quantities are summed per SKU across all active orders for that SKU.
+ */
+export function buildActiveInboundMap(orders: InboundOrder[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const order of orders) {
+    if (isActiveInboundOrder(order)) {
+      map.set(order.sku, (map.get(order.sku) ?? 0) + order.quantity);
+    }
+  }
+  return map;
+}
+
+/**
  * Recommended reorder quantity.
  *
  * Formula:
- *   target  = leadTimeDays + 60          (cover transit period + 60 days post-arrival)
- *   needed  = ceil(avgDailySales × target)
- *   reorder = max(0, needed − fbaAvailable − inboundUnits)
+ *   target               = leadTimeDays + 60   (cover transit + 60 days post-arrival)
+ *   needed               = ceil(avgDailySales × target)
+ *   fbaEffective         = fbaAvailable + reservedUnits
+ *   reorder = max(0, needed − fbaEffective − sheetInboundUnits − activeAppInboundUnits)
  *
- * Subtracting current stock means we only recommend what is actually
- * missing — not a flat 60-day replenishment on top of what you already have.
+ * - fbaAvailable         = row.fbaAvailable (units sellable in FBA right now)
+ * - reservedUnits        = row.reservedUnits (Google Sheet col G — inside Amazon FC,
+ *                           locked against pending orders; will free up; defaults to 0)
+ * - sheetInboundUnits   = row.inboundUnits (Google Sheet col F — en route to FBA)
+ * - activeAppInboundUnits = sum of app-created inbound order quantities for this SKU
+ *                           where today ≤ expectedArrivalDate + 10 days (defaults to 0)
+ *
+ * Reserved units are treated as FBA-side stock (not inbound) because they are already
+ * inside Amazon's fulfillment network — physically present, just locked against orders.
+ * Subtracting all in-hand and in-flight stock means we only recommend what is missing.
+ * Expired app orders (past arrival + 10 days) are NOT passed here — they are excluded
+ * upstream by buildActiveInboundMap().
  */
-export function recommendedReorderQty(row: InventoryRow): number {
+export function recommendedReorderQty(row: InventoryRow, activeAppInboundUnits = 0): number {
   if (row.avgDailySales === 0) return 0;
   const target = row.leadTimeDays + 60;
   const needed = Math.ceil(row.avgDailySales * target);
-  return Math.max(0, needed - row.fbaAvailable - row.inboundUnits);
+  const fbaEffective = row.fbaAvailable + row.reservedUnits;
+  return Math.max(0, needed - fbaEffective - row.inboundUnits - activeAppInboundUnits);
 }
 
 /**

@@ -71,19 +71,34 @@ When adding new UI, match the hierarchy and density of existing components exact
 The canonical formula in `lib/reorder.ts → recommendedReorderQty()` is:
 
 ```
-target  = leadTimeDays + 60
-needed  = ceil(avgDailySales × target)
-reorder = max(0, needed − fbaAvailable − inboundUnits)
+target        = leadTimeDays + 60
+needed        = ceil(avgDailySales × target)
+fbaEffective  = fbaAvailable + reservedUnits
+reorder = max(0, needed − fbaEffective − sheetInboundUnits − activeAppInboundUnits)
 ```
+
+Where:
+- `fbaAvailable`         = `row.fbaAvailable` (Google Sheet col E — units sellable in FBA now)
+- `reservedUnits`        = `row.reservedUnits` (Google Sheet col G — inside Amazon FC, locked against pending orders; treated as FBA-side stock, not inbound; defaults to 0)
+- `sheetInboundUnits`    = `row.inboundUnits` (Google Sheet col F — en route to FBA; always included)
+- `activeAppInboundUnits` = sum of app-created inbound orders for this SKU where `today ≤ expectedArrivalDate + 10 days` (defaults to 0 if none)
+
+The function signature is `recommendedReorderQty(row: InventoryRow, activeAppInboundUnits = 0)`. Callers that only have an `InventoryRow` (no app inbound data) still work correctly.
+
+**Reserved units are FBA-side stock, not inbound.** They are physically inside Amazon's fulfillment network — just locked against pending customer orders. Do not move them into the inbound deduction. They are correctly grouped with `fbaAvailable` as `fbaEffective`.
 
 **Do not simplify this to `avgDailySales × 60`.** That earlier version was wrong — it ignored lead time demand and over-ordered by not crediting existing inventory.
 
-The three parts are each load-bearing:
+Each part is load-bearing:
 1. **`leadTimeDays + 60`** — stock sells during the transit window; you need to cover those days too, not just 60 days post-arrival
-2. **`− fbaAvailable − inboundUnits`** — credit what you already own; only order what is missing
-3. **`max(0, ...)`** — healthy and overstock SKUs return 0, never a negative recommendation
+2. **`− fbaEffective`** — credit all stock currently inside Amazon FC (available + reserved)
+3. **`− sheetInboundUnits`** — credit sheet inbound (col F) — en route, already accounted for
+4. **`− activeAppInboundUnits`** — credit active app-created orders (within 10-day post-arrival buffer); expired orders are excluded upstream by `buildActiveInboundMap()`
+5. **`max(0, ...)`** — healthy and overstock SKUs return 0, never a negative recommendation
 
 If a stakeholder asks to change the target horizon (e.g., 90 days instead of 60), change only the constant `60` — do not restructure the formula.
+
+**Active vs. expired app inbound:** `isActiveInboundOrder(order)` in `lib/reorder.ts` returns true while `today ≤ expectedArrivalDate + 10 days`. After the buffer, the order is excluded from math — its units should already be visible in FBA or sheet inbound. Do not change the 10-day buffer without explicit approval.
 
 ---
 
@@ -184,21 +199,26 @@ The admin page has its own `error.tsx` (`app/(app)/admin/error.tsx`) specificall
 
 ---
 
-## Rule 14: App-created inbound orders are display-only — do not include them in reorder calculations
+## Rule 14: App-created inbound orders affect reorder calculations while active — expire after arrival + 10 days
 
-Phase 4A introduced a Supabase `inbound_orders` table for tracking shipments created inside the app. These orders appear in the **Tracked Orders** section of `InboundSummary` with a countdown badge.
+Phase 4A introduced a Supabase `inbound_orders` table for tracking shipments created inside the app. These orders are now **actively included in reorder recommendations** while they are within 10 days past their expected arrival date.
 
-**Critical constraint:** app-created inbound orders are **not included in the reorder formula**. The formula in `lib/reorder.ts → recommendedReorderQty()` still uses only `row.inboundUnits` from column F of the Google Sheet:
+**Active window:** `isActiveInboundOrder(order)` in `lib/reorder.ts` returns `true` while `today ≤ expectedArrivalDate + 10 days`. The 10-day buffer accounts for the lag between physical receipt and FBA visibility.
 
+**Expired:** after `expectedArrivalDate + 10 days`, the order is excluded from the formula. Units should already be reflected in FBA stock or Google Sheet `inboundUnits` by then; continuing to subtract would double-count.
+
+**Do not auto-delete expired orders.** They remain in `inbound_orders` with `status = 'pending'` for history. Expiry is determined entirely in application code by `isActiveInboundOrder()` — no database change is needed.
+
+The formula (see Rule 6 for full detail):
 ```
-reorder = max(0, ceil(avgDailySales × (leadTimeDays + 60)) − fbaAvailable − inboundUnits)
+reorder = max(0, ceil(avgDailySales × (leadTimeDays + 60)) − fbaAvailable − sheetInboundUnits − activeAppInboundUnits)
 ```
 
-Do **not** add `inboundOrders` quantities to this calculation until the double-counting rules are explicitly decided and approved. A shipment may be tracked in both the Supabase table (app-created) and in the Google Sheet `inboundUnits` column (manually updated). Including both would double-count the same stock.
-
-The two inbound sources in `InboundSummary` are intentionally kept separate:
-- **Tracked Orders** — from Supabase `inbound_orders` (status = `pending`), with expected arrival date countdown
-- **Sheet Inbound** — from Google Sheets `inboundUnits > 0`, no dates, no countdown
+**Two inbound sources remain separate — do not merge them:**
+- **Sheet Inbound** — from Google Sheets col F (`inboundUnits`). Always included in formula as `row.inboundUnits`. Always shown in "Sheet Inbound" section of `InboundSummary`.
+- **App Orders** — from Supabase `inbound_orders`. Only the *active* subset (within 10-day buffer) is subtracted from the recommendation. Shown in `InboundSummary` as:
+  - **Active App Orders** — credited in reorder math; "In buffer period" label for past-arrival-within-buffer orders
+  - **Past Orders** — expired orders shown for history with "Expired from reorder" badge; not in formula
 
 **Numeric validation:** server-side validation of inbound order fields must use `Number.isFinite()`, not comparisons against `NaN`. `NaN < 0` evaluates to `false`, which would pass invalid values through to Supabase. The correct pattern:
 
@@ -211,3 +231,74 @@ if (!Number.isFinite(row.estimatedDaysToFba) || row.estimatedDaysToFba < 0) { ..
 - Admin: can create orders for any client, can mark orders as received (`markOrderReceived`)
 - Client: can create orders only for their own `clientSlug`; cannot mark orders received
 - `getPendingInboundOrders` is non-fatal — returns `[]` on Supabase error so the dashboard still loads from Google Sheets
+
+---
+
+## Rule 15: Display-layer rules introduced in Phases 4B/4B.1/4C — do not revert
+
+### 15a — Days Until OOS must never display "Infinity" or any value above 90
+
+`stockoutInDays()` in `lib/reorder.ts` returns `Infinity` when `avgDailySales === 0`. The display layer in `DaysUntilOOS` (inside `InventoryTable.tsx`) must guard against this:
+
+```tsx
+if (!isFinite(days) || days > 90) {
+  return <span ...>90+ Days</span>;
+}
+```
+
+Do **not** use `days === Infinity`, `days > 1000`, or `Math.floor(days) === Infinity` — use `!isFinite(days)`. Do not display the raw number for any value above 90 — the cap is a business rule, not a cosmetic choice.
+
+**Sort behaviour:** `Infinity` sorts **last** natively in JavaScript ascending numeric comparison. The default "Closest to OOS" sort (`stockoutInDays` ascending) already places zero-sales SKUs at the bottom without special handling. Do not add a sort override for `Infinity`.
+
+### 15b — "Overstock" renders as "Sufficient Stock" in all badges — the internal type is unchanged
+
+The internal `InventoryStatus` type (in `lib/mock-data.ts`) and `getReorderStatus()` (in `lib/reorder.ts`) continue to return `"Overstock"`. A display-only label map lives in `components/ui/StatusBadge.tsx`:
+
+```ts
+const INVENTORY_DISPLAY_LABELS: Record<InventoryStatus, string> = {
+  "Reorder Now": "Reorder Now",
+  "Reorder Soon": "Reorder Soon",
+  "OK": "OK",
+  "Overstock": "Sufficient Stock",
+};
+```
+
+Do **not** change the internal value to `"Sufficient Stock"` — that would require updating all formula comparisons and the reorder status dropdown filter. Always map at the display boundary only.
+
+The status filter dropdown in `InventoryTable` maps the user-visible label `"Sufficient Stock"` back to the internal value `"Overstock"` via:
+
+```ts
+if (statusFilter === "Sufficient Stock") return rs === "Overstock";
+```
+
+If you add new status values, add them to both `INVENTORY_DISPLAY_LABELS` and the filter mapping.
+
+### 15c — Collapsible sidebar state lives in SidebarShell.tsx — not in the layout server component
+
+`app/(app)/layout.tsx` is a **server component**. It cannot own client state. The `collapsed: boolean` toggle state lives in `components/layout/SidebarShell.tsx`, which is a `"use client"` wrapper that renders `<Sidebar>`, `<Header>`, and the content `<div>` together.
+
+```
+layout.tsx (server) → <SidebarShell> (client, owns collapsed state)
+                         ├── <Sidebar collapsed={collapsed} />
+                         ├── <Header collapsed={collapsed} onToggle={toggle} />
+                         └── <div className={collapsed ? "md:ml-[72px]" : "md:ml-[280px]"} ...>
+```
+
+Do not move `collapsed` state into `Sidebar` or `Header` — neither component should own it. Do not convert `layout.tsx` to a client component to hold this state.
+
+**Width values:** sidebar `w-[72px]` (collapsed) / `w-[280px]` (expanded). Content margin `md:ml-[72px]` / `md:ml-[280px]`. Both use `transition-[width]` and `transition-[margin]` with `duration-300 ease-in-out`. Do not change these values without checking that the content area tracks correctly.
+
+**Print:** the content div has `print:ml-0 print:pt-0`. The sidebar is `print-hidden`. Do not remove these — they ensure the print report renders full-width without sidebar margin.
+
+### 15d — InventoryHealthVisual receives live inventory data — not hardcoded values
+
+`components/dashboard/InventoryHealthVisual.tsx` accepts `inventory: InventoryRow[]` from `DashboardContent`. It computes the top 8 SKUs by `fbaAvailable` at render time:
+
+```ts
+const top = [...inventory].sort((a, b) => b.fbaAvailable - a.fbaAvailable).slice(0, TOP_N);
+const maxFba = top[0]?.fbaAvailable ?? 1;
+```
+
+Do **not** revert to hardcoded bars or stub data. Do not pass a separate `chartData` prop — use the existing `inventory` prop. If the inventory array is empty, the component renders a "No inventory data available." empty state.
+
+Low stock threshold: `< 50` units → red gradient (`from-error/60 to-error/40`). Normal stock → teal gradient (`from-secondary-container/70 to-secondary-container/45`). Do not change this threshold without explicit approval.

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getClientConfig } from "@/lib/clients";
 import { getInventoryFromSheet } from "@/lib/sheets";
 import { sortByReorderUrgency } from "@/lib/reorder";
+import { getPendingInboundOrders } from "@/app/actions/inbound-orders";
 import ReorderTable from "@/components/reorder/ReorderTable";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,11 @@ export default async function ReorderPage({ params }: PageProps) {
   if (!clientConfig) notFound();
 
   // Throws on failure — propagates to error.tsx boundary. No mock fallback.
-  const inventory = await getInventoryFromSheet(clientConfig);
+  // inboundOrders is non-fatal (returns [] on error) so reorder page still loads.
+  const [inventory, inboundOrders] = await Promise.all([
+    getInventoryFromSheet(clientConfig),
+    getPendingInboundOrders(clientSlug),
+  ]);
   const sorted = sortByReorderUrgency(inventory);
 
   const lastUpdated = inventory.reduce(
@@ -67,7 +72,8 @@ export default async function ReorderPage({ params }: PageProps) {
             Quantities ensure 60 days of coverage after your next shipment
             arrives.{" "}
             <span className="font-semibold text-on-surface">
-              Current FBA stock and inbound units are credited
+              FBA available, reserved units, sheet inbound, and active
+              app-created inbound orders are all credited
             </span>{" "}
             so you only order what is actually missing.
           </p>
@@ -102,7 +108,7 @@ export default async function ReorderPage({ params }: PageProps) {
       </div>
 
       {/* Reorder Table */}
-      <ReorderTable rows={sorted} />
+      <ReorderTable rows={sorted} inboundOrders={inboundOrders} />
 
       {/* Footer note */}
       <div className="mt-8 p-4 bg-surface-container rounded-lg border border-outline-variant">
@@ -110,14 +116,19 @@ export default async function ReorderPage({ params }: PageProps) {
           <span className="material-symbols-outlined text-[18px] text-outline mt-0.5 flex-shrink-0">
             info
           </span>
-          Recommended quantities are calculated as{" "}
-          <strong className="text-on-surface mx-1">
-            (lead time + 60 days) × daily sales rate − current FBA − inbound
-          </strong>
-          , floored at zero. This ensures 60 days of coverage after your next
-          shipment arrives, without over-ordering stock you already have. Adjust
-          quantities based on supplier minimums, freight consolidation, or
-          seasonal demand.
+          <span>
+            Recommended quantities are calculated as{" "}
+            <strong className="text-on-surface">
+              (avg daily sales × lead time + 60-day target) − FBA available −
+              reserved units − sheet inbound − active app inbound
+            </strong>
+            , floored at zero. Reserved units are treated as FBA-side stock
+            because they are already inside Amazon&apos;s fulfillment network.
+            App-created inbound orders are credited while today is within 10
+            days past their expected receiving date — after that buffer they are
+            excluded to avoid double-counting. Adjust quantities based on
+            supplier minimums, freight consolidation, or seasonal demand.
+          </span>
         </p>
       </div>
 

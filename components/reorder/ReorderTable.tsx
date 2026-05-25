@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { InventoryRow, MarketplaceFilter } from "@/lib/mock-data";
 import { MARKETPLACES } from "@/lib/mock-data";
+import type { InboundOrder } from "@/lib/types";
 import {
   getReorderStatus,
   recommendedReorderQty,
   totalCoverageDays,
+  buildActiveInboundMap,
   type ReorderStatus,
 } from "@/lib/reorder";
 
 interface ReorderTableProps {
   rows: InventoryRow[];
+  inboundOrders: InboundOrder[];
 }
 
 // ── Sub-components ────────────────────────────────────────────
@@ -131,9 +134,16 @@ function AlertTile({
 
 // ── Main component ────────────────────────────────────────────
 
-export default function ReorderTable({ rows }: ReorderTableProps) {
+export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps) {
   const [activeMarketplace, setActiveMarketplace] =
     useState<MarketplaceFilter>("All");
+
+  // Build SKU → active app inbound units map once per render.
+  // Only orders within 10 days past their expected arrival date are included.
+  const activeInboundMap = useMemo(
+    () => buildActiveInboundMap(inboundOrders),
+    [inboundOrders]
+  );
 
   const filtered =
     activeMarketplace === "All"
@@ -254,7 +264,8 @@ export default function ReorderTable({ rows }: ReorderTableProps) {
               ) : (
                 filtered.map((row) => {
                   const status = getReorderStatus(row);
-                  const recQty = recommendedReorderQty(row);
+                  const appActiveUnits = activeInboundMap.get(row.sku) ?? 0;
+                  const recQty = recommendedReorderQty(row, appActiveUnits);
                   const rowBg =
                     status === "Reorder Now" ? "bg-[#fff8f8]" : "";
 
@@ -283,7 +294,7 @@ export default function ReorderTable({ rows }: ReorderTableProps) {
                         </span>
                       </td>
 
-                      {/* Current FBA Stock */}
+                      {/* Current FBA Stock — available + reserved both credited */}
                       <td className="px-6 py-5">
                         <p
                           className={`font-numeric-data text-numeric-data leading-tight ${
@@ -292,12 +303,13 @@ export default function ReorderTable({ rows }: ReorderTableProps) {
                         >
                           {row.fbaAvailable.toLocaleString()}
                           <span className="font-label-sm text-label-sm text-outline ml-1">
-                            units
+                            available
                           </span>
                         </p>
                         {row.reservedUnits > 0 && (
-                          <p className="font-label-sm text-label-sm text-outline mt-1">
-                            {row.reservedUnits.toLocaleString()} reserved
+                          <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+                            +{row.reservedUnits.toLocaleString()}{" "}
+                            <span className="text-outline">reserved · credited</span>
                           </p>
                         )}
                         {row.fbaAvailable === 0 && (
@@ -307,21 +319,35 @@ export default function ReorderTable({ rows }: ReorderTableProps) {
                         )}
                       </td>
 
-                      {/* Inbound */}
+                      {/* Inbound — sheet col F + active app orders */}
                       <td className="px-6 py-5">
-                        {row.inboundUnits > 0 ? (
-                          <div>
-                            <p className="font-numeric-data text-numeric-data text-secondary leading-tight">
-                              +{row.inboundUnits.toLocaleString()}
-                            </p>
-                            <p className="font-label-sm text-label-sm text-outline mt-1">
-                              units
-                            </p>
-                          </div>
-                        ) : (
+                        {row.inboundUnits === 0 && appActiveUnits === 0 ? (
                           <span className="font-label-md text-label-md text-outline">
                             —
                           </span>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {row.inboundUnits > 0 && (
+                              <div>
+                                <p className="font-numeric-data text-numeric-data text-secondary leading-tight">
+                                  +{row.inboundUnits.toLocaleString()}
+                                </p>
+                                <p className="font-label-sm text-label-sm text-outline mt-0.5">
+                                  sheet inbound
+                                </p>
+                              </div>
+                            )}
+                            {appActiveUnits > 0 && (
+                              <div>
+                                <p className="font-numeric-data text-numeric-data text-primary leading-tight">
+                                  +{appActiveUnits.toLocaleString()}
+                                </p>
+                                <p className="font-label-sm text-label-sm text-outline mt-0.5">
+                                  app orders (active)
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </td>
 
@@ -346,7 +372,16 @@ export default function ReorderTable({ rows }: ReorderTableProps) {
                           </span>
                         </p>
                         <p className="font-label-sm text-label-sm text-outline mt-1 leading-snug max-w-[180px]">
-                          covers next 60 days after lead time
+                          {appActiveUnits > 0 || row.reservedUnits > 0
+                            ? [
+                                "60-day target ·",
+                                "FBA",
+                                row.reservedUnits > 0 ? `+${row.reservedUnits.toLocaleString()} reserved` : null,
+                                row.inboundUnits > 0 ? `+${row.inboundUnits.toLocaleString()} sheet` : null,
+                                appActiveUnits > 0 ? `+${appActiveUnits.toLocaleString()} app` : null,
+                                "credited",
+                              ].filter(Boolean).join(" ")
+                            : "covers next 60 days after lead time"}
                         </p>
                       </td>
 

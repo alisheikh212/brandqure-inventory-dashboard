@@ -1,5 +1,6 @@
 import type { InventoryRow } from "@/lib/mock-data";
 import type { InboundOrder } from "@/lib/types";
+import { isActiveInboundOrder } from "@/lib/reorder";
 
 interface InboundSummaryProps {
   inventory: InventoryRow[];
@@ -26,9 +27,16 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
     .filter((row) => row.inboundUnits > 0)
     .sort((a, b) => b.inboundUnits - a.inboundUnits);
 
+  // Split app orders into active (counting in formula) and expired (history only).
+  // Active = isActiveInboundOrder() → today ≤ expectedArrivalDate + 10 days
+  // Expired = past that buffer — still shown for history but not in reorder math
+  const activeOrders = inboundOrders.filter((o) => isActiveInboundOrder(o));
+  const expiredOrders = inboundOrders.filter((o) => !isActiveInboundOrder(o));
+
   const hasSheetInbound = sheetInbound.length > 0;
-  const hasOrders = inboundOrders.length > 0;
-  const isEmpty = !hasSheetInbound && !hasOrders;
+  const hasActiveOrders = activeOrders.length > 0;
+  const hasExpiredOrders = expiredOrders.length > 0;
+  const isEmpty = !hasSheetInbound && !hasActiveOrders && !hasExpiredOrders;
 
   return (
     <div className="glass-panel lg:col-span-1 overflow-hidden flex flex-col h-[480px]">
@@ -54,19 +62,26 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
       ) : (
         <div className="flex-1 overflow-y-auto">
 
-          {/* Tracked Orders (Supabase) — shown first, with countdown */}
-          {hasOrders && (
+          {/* Active App-Created Orders — counting in reorder formula */}
+          {hasActiveOrders && (
             <div>
-              <div className="px-5 py-2 bg-white/30 border-b border-white/35">
+              <div className="px-5 py-2 bg-white/30 border-b border-white/35 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[13px] text-secondary">
+                  check_circle
+                </span>
                 <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-                  Tracked Orders
+                  Active App Orders
                 </p>
+                <span className="ml-auto font-label-sm text-label-sm text-secondary bg-secondary-fixed/60 border border-secondary/20 px-1.5 py-0.5 rounded-full">
+                  Credited in reorder
+                </span>
               </div>
               <ul className="divide-y divide-outline-variant/25">
-                {inboundOrders.map((order) => {
+                {activeOrders.map((order) => {
                   const days = daysFromToday(order.expectedArrivalDate);
-                  const isOverdue = days < 0;
                   const isToday = days === 0;
+                  // Past arrival but within 10-day buffer = "In buffer period"
+                  const isInBuffer = days < 0;
                   const pillClass = MARKETPLACE_COLORS[order.marketplace] ?? "bg-surface-container text-on-surface-variant";
 
                   return (
@@ -78,21 +93,21 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                         >
                           {order.productName}
                         </p>
-                        {/* Countdown badge */}
+                        {/* Status badge */}
                         <span
                           className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-sm text-label-sm ${
-                            isOverdue
-                              ? "bg-error-container text-error"
+                            isInBuffer
+                              ? "bg-[#fef3c7] text-[#92400e] border border-[#fbbf24]/40"
                               : isToday
                               ? "bg-[#e8f5e9] text-[#1b5e20]"
                               : "bg-surface-container text-on-surface-variant"
                           }`}
                         >
                           <span className="material-symbols-outlined text-[12px]">
-                            {isOverdue ? "warning" : "schedule"}
+                            {isInBuffer ? "hourglass_bottom" : "schedule"}
                           </span>
-                          {isOverdue
-                            ? `${Math.abs(days)}d overdue`
+                          {isInBuffer
+                            ? "In buffer period"
                             : isToday
                             ? "Today"
                             : `${days}d`}
@@ -116,10 +131,64 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
             </div>
           )}
 
+          {/* Expired App Orders — past buffer, no longer in reorder formula */}
+          {hasExpiredOrders && (
+            <div>
+              <div className="px-5 py-2 bg-white/20 border-b border-white/30 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[13px] text-outline">
+                  history
+                </span>
+                <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider">
+                  Past Orders
+                </p>
+                <span className="ml-auto font-label-sm text-label-sm text-outline bg-white/40 border border-outline-variant/40 px-1.5 py-0.5 rounded-full">
+                  Not in reorder
+                </span>
+              </div>
+              <ul className="divide-y divide-outline-variant/15">
+                {expiredOrders.map((order) => {
+                  const pillClass = MARKETPLACE_COLORS[order.marketplace] ?? "bg-surface-container text-on-surface-variant";
+                  return (
+                    <li key={order.id} className="px-5 py-3 flex flex-col gap-1 opacity-60">
+                      <div className="flex items-start justify-between gap-2">
+                        <p
+                          className="font-label-md text-label-md text-on-surface-variant truncate flex-1"
+                          title={order.productName}
+                        >
+                          {order.productName}
+                        </p>
+                        <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container text-outline border border-outline-variant/30">
+                          <span className="material-symbols-outlined text-[12px]">
+                            block
+                          </span>
+                          Expired from reorder
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`inline-block px-2 py-0.5 rounded-full font-label-sm text-label-sm ${pillClass}`}>
+                          {order.marketplace}
+                        </span>
+                        <span className="font-numeric-data text-numeric-data text-on-surface-variant">
+                          {order.quantity.toLocaleString()} units
+                        </span>
+                        <span className="font-label-sm text-label-sm text-outline">
+                          · est. {new Date(order.expectedArrivalDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           {/* Sheet Inbound (Google Sheets col F) — no dates */}
           {hasSheetInbound && (
             <div>
-              <div className="px-5 py-2 bg-white/30 border-b border-white/35">
+              <div className="px-5 py-2 bg-white/30 border-b border-white/35 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[13px] text-secondary">
+                  table_chart
+                </span>
                 <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Sheet Inbound
                 </p>
@@ -160,11 +229,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
       {/* Footer */}
       <div className="px-5 py-3 border-t border-white/40">
         <p className="font-label-sm text-label-sm text-on-surface-variant">
-          {hasOrders && !hasSheetInbound
-            ? "Tracked Orders from app · Sheet Inbound from Google Sheets"
-            : hasOrders && hasSheetInbound
-            ? "Tracked Orders with countdown · Sheet Inbound from Google Sheets"
-            : "Based on Google Sheets data"}
+          Active app orders credited in reorder math · Expired after +10 days past arrival
         </p>
       </div>
     </div>

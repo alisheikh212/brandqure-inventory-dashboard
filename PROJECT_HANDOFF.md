@@ -1,8 +1,8 @@
 # BrandQure Inventory Command Center — Project Handoff
 
 > **For:** Codex or any coding agent continuing this project
-> **Phase completed:** Phase 3A (Supabase auth) + Phase 3B (Google Sheets integration) + Phase 3C stabilization pass + Phase 3D-A (Admin Client & User Manager) + Phase 4A (Inbound Order Entry)
-> **Date last updated:** 2026-05-21
+> **Phase completed:** Phase 3A (Supabase auth) + Phase 3B (Google Sheets integration) + Phase 3C stabilization pass + Phase 3D-A (Admin Client & User Manager) + Phase 4A (Inbound Order Entry) + Phase 4B/4B.1 (Apple Glass UI Refresh + Polish) + Phase 4C (Dashboard Refinement)
+> **Date last updated:** 2026-05-24
 
 ---
 
@@ -806,3 +806,155 @@ Before including app-created inbound orders in reorder calculations, define the 
 - **Option B — Different stages:** The sheet's `inboundUnits` reflects Amazon-visible inbound (already at an FC). The app's orders are earlier-stage (supplier → freight → not yet at FC). No double-counting. Resolution: safe to sum both in the formula.
 
 Once the workflow is decided, the formula change is a one-line addition in `lib/reorder.ts` — requires approval per CLAUDE.md Rule 6.
+
+---
+
+## 17. Phase 4B / 4B.1 / 4C — Apple Glass UI Refresh & Dashboard Refinement (completed 2026-05-24)
+
+### What Was Built
+
+Three incremental passes were applied in sequence. All were **styling and display-layer only** — no Supabase logic, Google Sheets logic, Server Actions, server components, database schema, reorder formula, or inbound order logic was changed.
+
+---
+
+### Phase 4B — Apple Glass UI Refresh
+
+A full visual redesign pass converting the app from a flat Material Design 3 surface to Apple-inspired glassmorphism throughout.
+
+**`app/globals.css` — new utilities added:**
+
+| Class | Purpose |
+|---|---|
+| `.app-bg` | Layered radial gradient background (`#eaeefc` base with two colour glows) |
+| `.glass-panel` | `rgba(255,255,255,0.74)` background, `blur(16px) saturate(160%)`, white border, inset highlight, `border-radius: 16px` |
+| `.glass-header` | `rgba(255,255,255,0.84)` background, `blur(20px) saturate(180%)`, subtle shadow |
+| `.glass-modal` | `rgba(255,255,255,0.92)` background, `blur(28px) saturate(160%)`, `border-radius: 20px` |
+| `.glass-sidebar` | Near-black navy gradient (`#0d1628 → #0f1c30 → #0a1220`), `4px 0 28px` side shadow |
+| `.data-card` | Updated to match `.glass-panel` (was previously a flat white card) |
+| `.btn-primary-indigo` | Deep indigo gradient CTA pill with lift shadow on hover |
+| `.btn-primary-teal` | Teal gradient CTA pill — same pattern, different palette |
+| `.brand-input` | `rgba(255,255,255,0.80)` background, `backdrop-filter: blur(8px)`, 14px font |
+
+**Components updated:** `app/(app)/layout.tsx` (`app-bg` class), `Sidebar.tsx` (glass avatar ring, nav active state changed to `bg-white/[0.12] rounded-xl`), `Header.tsx` (`glass-header`), `DashboardContent.tsx` (pill filters, gradient Add Inbound button, glass Refresh button), `SummaryCards.tsx` (all 4 cards to `glass-panel`), `InventoryHealthVisual.tsx` (inner chart area glass), `SafeZoneVisual.tsx` (ring border glass), `InboundSummary.tsx` (glass section dividers), `InventoryTable.tsx` (glass container, frosted thead), `Modal.tsx` (glass backdrop + `glass-modal` panel), `StatusBadge.tsx` (outline-glass badge style), `AddInboundOrderModal.tsx` (Cancel → `.btn-ghost-glass`), `app/(app)/admin/page.tsx` (cards → `glass-panel`, gradient Add Client button), `app/(app)/settings/page.tsx` (cards → `glass-panel` class — was using unmatched `data-card` attribute).
+
+---
+
+### Phase 4B.1 — Visual Polish Pass
+
+Targeted refinements after the glass refresh:
+
+- **Action bar hierarchy** — dashboard header controls restructured into 3 tiers: (1) marketplace filter pills, (2) vertical divider + primary Add Inbound Order gradient button + secondary Refresh pill, (3) tertiary Reorder + Report ghost links.
+- **Stock status chip** — small inline badge next to "Inventory Overview" showing `client.stockStatus`. Colour: teal for Optimal/Good, amber for Review, red for Critical/Low. Display-only — reads existing `client.stockStatus` field, no new logic.
+- **Missing typography token** — `.text-body-sm` (`font-size: 14px; line-height: 20px; font-weight: 400`) added to `globals.css`. It was used in the modal error banner but had no CSS rule, causing a browser font fallback.
+- **`.btn-ghost-glass`** added to `globals.css` — `rgba(255,255,255,0.45)` pill background, `backdrop-filter: blur(8px)`, for Cancel/secondary actions in modals.
+- **Table contrast** — header text opacity lifted from `/70` to `/85`; row dividers from `/15` to `/20`; ASIN rendered as `font-mono text-[11px]`; "Out of Stock" converted from plain text to a glass border badge.
+- **SafeZoneVisual** — three-layer ring (outer glow + track + active), `tabular-nums` on percentage, thicker `h-2` progress bar.
+- **SummaryCards** — icon bubbles get `border border-white/40 shadow-sm`; all icon bg values switched to translucent.
+
+---
+
+### Phase 4C — Dashboard Refinement
+
+Four functional and display changes:
+
+#### 1. Collapsible Sidebar
+
+**Architecture:** `app/(app)/layout.tsx` is a server component and cannot own client state. A new `"use client"` wrapper component `components/layout/SidebarShell.tsx` was introduced to own the `collapsed: boolean` state.
+
+- `SidebarShell` renders `<Sidebar>`, `<Header>`, and the content `<div>` with dynamic margins.
+- The toggle button lives in `Header` — clicking it calls `onToggle()` from props.
+- The content `<div>` uses `md:ml-[72px]` (collapsed) or `md:ml-[280px]` (expanded) with `transition-[margin] duration-300 ease-in-out`.
+- `Sidebar` uses `w-[72px]` (collapsed) or `w-[280px]` (expanded) with `transition-[width] duration-300 ease-in-out`.
+- When collapsed: nav labels hidden, icons centred (`justify-center p-2.5`), `title` attribute on `<Link>` for native tooltip, user avatar shows initials only.
+- Print: `print:ml-0 print:pt-0` on the content div — sidebar is already `print-hidden`.
+
+**Files changed:** `components/layout/SidebarShell.tsx` (new), `components/layout/Sidebar.tsx` (interface: added `collapsed` prop), `components/layout/Header.tsx` (interface: added `collapsed`, `onToggle` props; width tracks sidebar state), `app/(app)/layout.tsx` (replaced Sidebar + Header + div with `<SidebarShell>`).
+
+#### 2. Days Until OOS — "90+ Days" Display Rule
+
+`stockoutInDays()` in `lib/reorder.ts` returns `Infinity` when `avgDailySales === 0`. Without a display guard, this renders as "Infinity days left".
+
+**Rule:** any value that is not finite OR is greater than 90 renders as the "90+ Days" badge:
+
+```tsx
+if (!isFinite(days) || days > 90) {
+  return <span ...>90+ Days</span>;
+}
+```
+
+`Infinity` values sort **last** in the default ascending OOS sort (`Infinity > any finite number` is true in JS), so zero-sales SKUs naturally float to the bottom of the "Closest to OOS" sort without special handling.
+
+**File changed:** `components/dashboard/InventoryTable.tsx` (`DaysUntilOOS` subcomponent).
+
+#### 3. "Sufficient Stock" Status Label
+
+The internal `InventoryStatus` type and all reorder formula logic use `"Overstock"`. A display-only label map was added to `StatusBadge.tsx`:
+
+```ts
+const INVENTORY_DISPLAY_LABELS: Record<InventoryStatus, string> = {
+  "Reorder Now": "Reorder Now",
+  "Reorder Soon": "Reorder Soon",
+  "OK": "OK",
+  "Overstock": "Sufficient Stock",
+};
+```
+
+`InventoryStatusBadge` renders `INVENTORY_DISPLAY_LABELS[status]` instead of `{status}`. The type, the formula, and `getReorderStatus()` are unchanged — only the badge label is different.
+
+The status filter dropdown in `InventoryTable` maps `"Sufficient Stock"` → `rs === "Overstock"` so filtering continues to work correctly.
+
+**File changed:** `components/ui/StatusBadge.tsx`.
+
+#### 4. SKU Health Monitor — Search, Filter, Sort Controls
+
+`InventoryTable` gained client-side controls for searching and sorting the inventory table:
+
+- **Search** — free-text input, matches against `sku` and `productName` (case-insensitive).
+- **Status filter** — dropdown: All Statuses / Reorder Now / Reorder Soon / OK / Sufficient Stock.
+- **Sort** — dropdown: Closest to OOS (default, `stockoutInDays` ascending), Highest FBA Stock, Lowest FBA Stock, SKU A–Z.
+- **Clear button** — appears only when any filter/sort is non-default; resets all three to defaults.
+- **Filter pipeline** (via `useMemo`): marketplace filter (from parent prop) → search → status → sort.
+- Table height: fixed at 520px, scrollable. Empty state: "No SKUs match your filters."
+
+**File changed:** `components/dashboard/InventoryTable.tsx`.
+
+#### 5. FBA Stock by SKU Chart (replaces Inventory Health Trend)
+
+`InventoryHealthVisual` was rewritten to show live data instead of decorative hardcoded bars:
+
+- **Props:** now accepts `inventory: InventoryRow[]` from `DashboardContent`.
+- **Data:** top 8 SKUs by `fbaAvailable`, descending. `maxFba` is the highest value (bar fills 100% of available width).
+- **Bars:** proportional CSS horizontal bars. Low stock (< 50 units) renders in red gradient (`from-error/60`); normal stock in teal gradient (`from-secondary-container/70`).
+- **Value labels:** inside bar if `pct > 20`; outside to the right otherwise.
+- **Title:** "FBA Stock by SKU" / "Top N of M SKUs by FBA units".
+- Same card placement (left 2/3 of the bento row), same height (`h-[360px]`), same `lg:col-span-2` layout.
+
+**Files changed:** `components/dashboard/InventoryHealthVisual.tsx`, `components/dashboard/DashboardContent.tsx` (added `inventory={inventory}` prop).
+
+---
+
+### Scope Confirmation
+
+The following were **not changed** in any Phase 4 pass:
+
+- Supabase auth, RLS policies, `lib/supabase/client.ts`, `lib/supabase/server.ts`
+- Google Sheets integration (`lib/sheets.ts`, `lib/clients.ts`)
+- Server Actions (`app/actions/refresh-sheet.ts`, `app/actions/inbound-orders.ts`)
+- Reorder formula (`lib/reorder.ts → recommendedReorderQty()`)
+- Inbound order creation logic (`components/modals/AddInboundOrderModal.tsx` logic, `app/actions/inbound-orders.ts`)
+- Database schema (Supabase `clients` table, `inbound_orders` table)
+- Route structure — no new routes, no renamed routes
+
+### Build State After Phase 4C
+
+```
+npx tsc --noEmit  → 0 errors
+npm run lint      → 0 errors, 0 warnings
+npm run build     → clean (all routes dynamic, no static params issues)
+```
+
+Committed as `268b23a`. Pushed to GitHub. Vercel auto-deployed.
+
+### Next Recommended Decision
+
+Before any further data changes: define the **inbound double-counting rule** (see §16 Next Recommended Decision and CLAUDE.md Rule 14). This decision gates whether app-created inbound orders can be included in the reorder formula — currently they are display-only.
