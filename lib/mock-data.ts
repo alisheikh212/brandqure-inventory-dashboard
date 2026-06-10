@@ -10,7 +10,7 @@
 
 export type StockStatus = "Optimal" | "Good" | "Review" | "Critical";
 export type Tier = "Enterprise" | "Pro" | "Basic";
-export type Marketplace = "Amazon USA" | "Amazon Canada" | "Shopify" | "Walmart";
+export type Marketplace = "Amazon USA" | "Amazon Canada" | "Amazon UK" | "Shopify" | "Walmart";
 export type MarketplaceFilter = "All" | Marketplace;
 export type InventoryStatus =
   | "Healthy"
@@ -208,6 +208,7 @@ export const MARKETPLACES: MarketplaceFilter[] = [
   "All",
   "Amazon USA",
   "Amazon Canada",
+  "Amazon UK",
   "Shopify",
   "Walmart",
 ];

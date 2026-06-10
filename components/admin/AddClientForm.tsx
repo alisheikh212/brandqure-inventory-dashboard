@@ -5,7 +5,7 @@ import { addClient, type ActionResult } from '@/app/actions/admin-clients'
 import Link from 'next/link'
 
 const TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Shopify', 'Walmart'] as const
+const MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart'] as const
 
 export default function AddClientForm() {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(addClient, null)

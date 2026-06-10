@@ -22,7 +22,7 @@ interface OrderRow {
   estimatedDaysToFba: string
 }
 
-const MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Shopify', 'Walmart'] as const
+const MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart'] as const
 
 let _nextKey = 1
 function nextKey() { return _nextKey++ }

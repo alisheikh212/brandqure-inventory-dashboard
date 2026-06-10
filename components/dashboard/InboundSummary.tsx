@@ -10,6 +10,7 @@ interface InboundSummaryProps {
 const MARKETPLACE_COLORS: Record<string, string> = {
   "Amazon USA": "bg-[#fff3e0] text-[#e65100]",
   "Amazon Canada": "bg-[#e8f5e9] text-[#1b5e20]",
+  "Amazon UK": "bg-[#e8eaf6] text-[#283593]",
   Shopify: "bg-[#f3e5f5] text-[#4a148c]",
   Walmart: "bg-[#e3f2fd] text-[#0d47a1]",
 };

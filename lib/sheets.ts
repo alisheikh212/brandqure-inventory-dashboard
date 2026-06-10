@@ -79,7 +79,7 @@ async function fetchSheetRows(
 }
 
 const VALID_MARKETPLACES = new Set<string>([
-  'Amazon USA', 'Amazon Canada', 'Shopify', 'Walmart',
+  'Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart',
 ])
 
 function parseSheetRows(

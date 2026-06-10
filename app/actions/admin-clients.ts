@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 const SLUG_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
 const VALID_TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const VALID_MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Shopify', 'Walmart'] as const
+const VALID_MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart'] as const
 
 async function requireAdmin() {
   const supabase = await createClient()
