@@ -3,9 +3,16 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getClientConfig } from "@/lib/clients";
 import { getInventoryFromSheet } from "@/lib/sheets";
-import { computeSummaryStats } from "@/lib/reorder";
+import {
+  computeSummaryStats,
+  recommendedReorderQty,
+  buildActiveInboundMap,
+  sortByReorderUrgency,
+  getReorderStatus,
+} from "@/lib/reorder";
 import { InventoryStatusBadge } from "@/components/ui/StatusBadge";
 import PrintButton from "@/components/print/PrintButton";
+import { getPendingInboundOrders } from "@/app/actions/inbound-orders";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +44,21 @@ export default async function PrintReportPage({ params }: PageProps) {
   const clientConfig = await getClientConfig(clientSlug);
   if (!clientConfig) notFound();
 
-  // Throws on failure — propagates to error.tsx boundary. No mock fallback.
-  const inventory = await getInventoryFromSheet(clientConfig);
+  // Parallel fetch — same pattern as dashboard and reorder pages.
+  // getPendingInboundOrders is non-fatal (returns [] on error).
+  const [inventory, inboundOrders] = await Promise.all([
+    getInventoryFromSheet(clientConfig),
+    getPendingInboundOrders(clientSlug),
+  ]);
+
   const stats = computeSummaryStats(inventory);
+
+  // Build SKU → active app-inbound quantity map (credits orders within the
+  // 10-day post-arrival buffer, same logic as the reorder planning page).
+  const activeInboundMap = buildActiveInboundMap(inboundOrders);
+
+  // Sort by reorder urgency so the most critical SKUs appear first in the PDF.
+  const sortedInventory = sortByReorderUrgency(inventory);
 
   const client = {
     name: clientConfig.clientName,
@@ -54,7 +73,7 @@ export default async function PrintReportPage({ params }: PageProps) {
     <div className="report-wrapper bg-surface-container min-h-screen py-8 print:py-0 print:bg-white">
 
       {/* Screen-only controls — hidden in print via print-hidden */}
-      <div className="max-w-[816px] mx-auto mb-4 flex items-center justify-between px-4 print-hidden">
+      <div className="max-w-[1200px] mx-auto mb-4 flex items-center justify-between px-4 print-hidden">
         <Link
           href={`/dashboard/${client.slug}`}
           className="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
@@ -67,8 +86,13 @@ export default async function PrintReportPage({ params }: PageProps) {
         <PrintButton />
       </div>
 
-      {/* report-doc: max-w-[816px] on screen, 100% printable width in print */}
-      <div className="report-doc max-w-[816px] min-h-[1056px] print:min-h-0 mx-auto bg-surface-container-lowest print:shadow-none shadow-xl flex flex-col print:flex-none relative px-10 pt-10 pb-8 print:px-0 print:pt-0 print:pb-0 border border-outline-variant print:border-none">
+      {/*
+        report-doc:
+          Screen — max-w-[1200px] gives the table room to breathe
+          Print  — report-doc CSS overrides to max-width:100%, padding:0
+                   so content fills the full printable area (@page margins apply)
+      */}
+      <div className="report-doc max-w-[1200px] min-h-[1056px] print:min-h-0 mx-auto bg-surface-container-lowest print:shadow-none shadow-xl flex flex-col print:flex-none relative px-10 pt-10 pb-8 print:px-0 print:pt-0 print:pb-0 border border-outline-variant print:border-none">
 
         {/* Report Header */}
         <header className="report-section flex justify-between items-end border-b-2 border-primary pb-6 mb-8">
@@ -193,78 +217,117 @@ export default async function PrintReportPage({ params }: PageProps) {
             Priority Inventory Audit
           </h3>
 
-          {/* report-table-wrap: overflow clip removed, fixed-layout applied in print */}
+          {/*
+            report-table-wrap:
+              Screen — overflow-x-auto allows horizontal scroll on very small viewports
+              Print  — CSS switches to overflow:visible + table-layout:fixed + thead repeat
+          */}
           <div className="report-table-wrap w-full overflow-x-auto border border-outline-variant rounded">
             <table className="w-full text-left border-collapse">
               {/*
-                <colgroup> fixes column widths when table-layout: fixed kicks in at print.
-                Widths sum to 100%. Product column absorbs wrapping; numeric cols stay narrow.
+                <colgroup> fixes column widths when table-layout:fixed kicks in at print.
+                8 columns. Product absorbs word-wrap; numeric cols stay narrow.
+                Widths sum to 100%.
               */}
               <colgroup>
-                <col style={{ width: "11%" }} />{/* SKU */}
-                <col style={{ width: "27%" }} />{/* Product */}
-                <col style={{ width: "13%" }} />{/* Marketplace */}
-                <col style={{ width: "11%" }} />{/* FBA Avail */}
-                <col style={{ width: "10%" }} />{/* Inbound */}
-                <col style={{ width: "10%" }} />{/* Reserved */}
-                <col style={{ width: "18%" }} />{/* Status */}
+                <col style={{ width: "10%" }} />{/* SKU */}
+                <col style={{ width: "20%" }} />{/* Product */}
+                <col style={{ width: "11%" }} />{/* Marketplace */}
+                <col style={{ width: "9%" }} /> {/* FBA Avail */}
+                <col style={{ width: "8%" }} />  {/* Inbound */}
+                <col style={{ width: "8%" }} />  {/* Reserved */}
+                <col style={{ width: "12%" }} />{/* Status */}
+                <col style={{ width: "22%" }} />{/* Units to Order */}
               </colgroup>
               <thead>
                 <tr className="bg-surface text-on-surface-variant font-label-md text-label-md border-b-2 border-outline">
-                  {["SKU", "Product", "Marketplace", "FBA Avail", "Inbound", "Reserved", "Status"].map(
-                    (col) => (
-                      <th
-                        key={col}
-                        className="py-3 px-4 uppercase tracking-wider"
-                      >
-                        {col}
-                      </th>
-                    )
-                  )}
+                  {[
+                    "SKU",
+                    "Product",
+                    "Marketplace",
+                    "FBA Avail",
+                    "Inbound",
+                    "Reserved",
+                    "Status",
+                    "Units to Order",
+                  ].map((col) => (
+                    <th key={col} className="py-3 px-4 uppercase tracking-wider">
+                      {col}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="font-body-md text-body-md text-on-surface">
-                {inventory.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`border-b border-outline-variant ${
-                      row.status === "Out of Stock" || row.status === "Critical Low"
-                        ? "bg-error-container/10"
-                        : ""
-                    }`}
-                  >
-                    <td className="py-3 px-4 font-numeric-data text-sm">
-                      {row.sku}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-sm">
-                      {row.productName}
-                    </td>
-                    <td className="py-3 px-4 text-on-surface-variant text-sm">
-                      {row.marketplace}
-                    </td>
-                    <td
-                      className={`py-3 px-4 text-right font-numeric-data text-sm ${
-                        row.fbaAvailable === 0 ? "text-error" : ""
+                {sortedInventory.map((row) => {
+                  const activeAppQty = activeInboundMap.get(row.sku) ?? 0;
+                  const reorderQty = recommendedReorderQty(row, activeAppQty);
+                  const reorderStatus = getReorderStatus(row);
+
+                  return (
+                    <tr
+                      key={row.id}
+                      className={`border-b border-outline-variant ${
+                        row.status === "Out of Stock" || row.status === "Critical Low"
+                          ? "bg-error-container/10"
+                          : ""
                       }`}
                     >
-                      {row.fbaAvailable.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-numeric-data text-sm text-secondary">
-                      {row.inboundUnits > 0
-                        ? `+${row.inboundUnits.toLocaleString()}`
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-right font-numeric-data text-sm text-outline">
-                      {row.reservedUnits.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      <InventoryStatusBadge status={row.status} />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-3 px-4 font-numeric-data text-sm">
+                        {row.sku}
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-sm">
+                        {row.productName}
+                      </td>
+                      <td className="py-3 px-4 text-on-surface-variant text-sm">
+                        {row.marketplace}
+                      </td>
+                      <td
+                        className={`py-3 px-4 text-right font-numeric-data text-sm ${
+                          row.fbaAvailable === 0 ? "text-error" : ""
+                        }`}
+                      >
+                        {row.fbaAvailable.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right font-numeric-data text-sm text-secondary">
+                        {row.inboundUnits > 0
+                          ? `+${row.inboundUnits.toLocaleString()}`
+                          : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-right font-numeric-data text-sm text-outline">
+                        {row.reservedUnits.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <InventoryStatusBadge status={row.status} />
+                      </td>
+                      <td className="py-3 px-4 text-right font-numeric-data text-sm">
+                        {reorderQty === 0 ? (
+                          <span className="text-outline">—</span>
+                        ) : reorderStatus === "Reorder Now" ? (
+                          <span className="font-bold text-error">
+                            {reorderQty.toLocaleString()}
+                          </span>
+                        ) : reorderStatus === "Reorder Soon" ? (
+                          <span className="font-semibold text-[#b45309]">
+                            {reorderQty.toLocaleString()}
+                          </span>
+                        ) : (
+                          <span>{reorderQty.toLocaleString()}</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          {/* Formula footnote — print-friendly */}
+          <p className="mt-3 font-label-sm text-label-sm text-on-surface-variant leading-snug">
+            Units to Order = max(0, ceil(avg daily sales × (lead time + 60 days))
+            &minus; FBA available &minus; reserved units &minus; sheet inbound &minus; active app inbound).
+            Reserved units are treated as FBA-side stock. Active app inbound credited within 10-day post-arrival buffer.
+            Rows sorted by urgency.
+          </p>
         </section>
 
         {/* Document Footer */}
