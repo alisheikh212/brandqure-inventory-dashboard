@@ -25,16 +25,19 @@ export default function Sidebar({
   const dashboardHref = clientSlug ? `/dashboard/${clientSlug}` : "/admin";
   const reorderHref = clientSlug ? `/dashboard/${clientSlug}/reorder` : "/admin";
   const reportHref = clientSlug ? `/dashboard/${clientSlug}/print` : "/admin";
+  const inboundMapHref = clientSlug ? `/dashboard/${clientSlug}/inbound-map` : "/admin";
 
   const isActive = (match: string) => {
     if (match === "admin") return pathname === "/admin";
     if (match === "reorder") return pathname.endsWith("/reorder");
     if (match === "print") return pathname.endsWith("/print");
+    if (match === "inbound-map") return pathname.endsWith("/inbound-map");
     if (match === "dashboard")
       return (
         pathname.startsWith("/dashboard") &&
         !pathname.endsWith("/reorder") &&
-        !pathname.endsWith("/print")
+        !pathname.endsWith("/print") &&
+        !pathname.endsWith("/inbound-map")
       );
     return false;
   };
@@ -57,6 +60,12 @@ export default function Sidebar({
       icon: "analytics",
       href: reportHref,
       match: "print",
+    },
+    {
+      label: "Inbound Journey",
+      icon: "flight_takeoff",
+      href: inboundMapHref,
+      match: "inbound-map",
     },
     ...(role === "admin"
       ? [{ label: "Clients", icon: "groups", href: "/admin", match: "admin" }]

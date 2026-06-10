@@ -369,3 +369,14 @@
     print-color-adjust: exact !important;
   }
 }
+
+/* ============================================================
+   Inbound Journey — plane float animation
+   ============================================================ */
+@keyframes float-plane {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+.animate-float-plane {
+  animation: float-plane 2.8s ease-in-out infinite;
+}
