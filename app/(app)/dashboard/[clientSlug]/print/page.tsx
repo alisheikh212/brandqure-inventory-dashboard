@@ -50,8 +50,10 @@ export default async function PrintReportPage({ params }: PageProps) {
   const warehouseCapacity = 84;
 
   return (
-    <div className="bg-surface-container min-h-screen py-8 print:py-0 print:bg-white">
-      {/* Screen-only controls */}
+    /* report-wrapper: flattened to white with no padding in @media print */
+    <div className="report-wrapper bg-surface-container min-h-screen py-8 print:py-0 print:bg-white">
+
+      {/* Screen-only controls — hidden in print via print-hidden */}
       <div className="max-w-[816px] mx-auto mb-4 flex items-center justify-between px-4 print-hidden">
         <Link
           href={`/dashboard/${client.slug}`}
@@ -65,11 +67,11 @@ export default async function PrintReportPage({ params }: PageProps) {
         <PrintButton />
       </div>
 
-      {/* Document (A4 paper simulation) */}
-      <div className="max-w-[816px] min-h-[1056px] mx-auto bg-surface-container-lowest print:shadow-none shadow-xl flex flex-col relative px-10 pt-10 pb-8 border border-outline-variant print:border-none">
+      {/* report-doc: max-w-[816px] on screen, 100% printable width in print */}
+      <div className="report-doc max-w-[816px] min-h-[1056px] print:min-h-0 mx-auto bg-surface-container-lowest print:shadow-none shadow-xl flex flex-col print:flex-none relative px-10 pt-10 pb-8 print:px-0 print:pt-0 print:pb-0 border border-outline-variant print:border-none">
 
         {/* Report Header */}
-        <header className="flex justify-between items-end border-b-2 border-primary pb-6 mb-8">
+        <header className="report-section flex justify-between items-end border-b-2 border-primary pb-6 mb-8">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-primary">
               <span
@@ -101,8 +103,8 @@ export default async function PrintReportPage({ params }: PageProps) {
         </header>
 
         {/* Executive Summary */}
-        <section className="mb-10">
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-3 flex items-center gap-2">
+        <section className="report-section mb-10">
+          <h3 className="report-heading font-headline-md text-headline-md text-on-surface mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-outline">subject</span>
             Executive Summary
           </h3>
@@ -121,14 +123,14 @@ export default async function PrintReportPage({ params }: PageProps) {
         </section>
 
         {/* System Health Metrics */}
-        <section className="mb-10">
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+        <section className="report-section mb-10">
+          <h3 className="report-heading font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-outline">monitoring</span>
             System Health &amp; Metrics
           </h3>
           <div className="grid grid-cols-3 gap-6">
             {/* Total Active SKUs */}
-            <div className="border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
+            <div className="report-kpi border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
               <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
                 Total Active SKUs
               </span>
@@ -143,7 +145,7 @@ export default async function PrintReportPage({ params }: PageProps) {
             </div>
 
             {/* Critical Low Stock */}
-            <div className="border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
+            <div className="report-kpi border border-outline-variant p-5 rounded flex flex-col gap-2 bg-surface-container-lowest">
               <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
                 Reorder Now
               </span>
@@ -158,7 +160,7 @@ export default async function PrintReportPage({ params }: PageProps) {
             </div>
 
             {/* Warehouse Capacity */}
-            <div className="border border-outline-variant p-5 rounded flex flex-col justify-between bg-surface-container-lowest">
+            <div className="report-kpi border border-outline-variant p-5 rounded flex flex-col justify-between bg-surface-container-lowest">
               <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
                 Warehouse Capacity
               </span>
@@ -182,16 +184,31 @@ export default async function PrintReportPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Priority Inventory Audit */}
-        <section className="flex-grow mb-12">
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+        {/* Priority Inventory Audit — allowed to flow across pages */}
+        <section className="report-section-flow flex-grow print:flex-none mb-12 print:mb-0">
+          <h3 className="report-heading font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-outline">
               table_chart
             </span>
             Priority Inventory Audit
           </h3>
-          <div className="w-full overflow-x-auto border border-outline-variant rounded">
+
+          {/* report-table-wrap: overflow clip removed, fixed-layout applied in print */}
+          <div className="report-table-wrap w-full overflow-x-auto border border-outline-variant rounded">
             <table className="w-full text-left border-collapse">
+              {/*
+                <colgroup> fixes column widths when table-layout: fixed kicks in at print.
+                Widths sum to 100%. Product column absorbs wrapping; numeric cols stay narrow.
+              */}
+              <colgroup>
+                <col style={{ width: "11%" }} />{/* SKU */}
+                <col style={{ width: "27%" }} />{/* Product */}
+                <col style={{ width: "13%" }} />{/* Marketplace */}
+                <col style={{ width: "11%" }} />{/* FBA Avail */}
+                <col style={{ width: "10%" }} />{/* Inbound */}
+                <col style={{ width: "10%" }} />{/* Reserved */}
+                <col style={{ width: "18%" }} />{/* Status */}
+              </colgroup>
               <thead>
                 <tr className="bg-surface text-on-surface-variant font-label-md text-label-md border-b-2 border-outline">
                   {["SKU", "Product", "Marketplace", "FBA Avail", "Inbound", "Reserved", "Status"].map(
@@ -251,7 +268,7 @@ export default async function PrintReportPage({ params }: PageProps) {
         </section>
 
         {/* Document Footer */}
-        <footer className="bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm w-full py-6 mt-auto border-t border-outline-variant flex justify-between items-center">
+        <footer className="bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm w-full py-6 mt-auto print:mt-8 border-t border-outline-variant flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="font-label-md text-label-md font-semibold text-primary">
               BrandQure
@@ -275,4 +292,3 @@ export default async function PrintReportPage({ params }: PageProps) {
     </div>
   );
 }
-
