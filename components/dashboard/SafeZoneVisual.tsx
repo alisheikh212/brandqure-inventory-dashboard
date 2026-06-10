@@ -9,7 +9,7 @@ export default function SafeZoneVisual({
     <div className="data-card p-6 flex flex-col h-[360px]">
       <div className="flex justify-between items-center mb-5">
         <h3 className="font-headline-md text-headline-md text-on-surface tracking-tight">
-          Global Safe Zone
+          Inventory Health Score
         </h3>
       </div>
 
@@ -27,7 +27,7 @@ export default function SafeZoneVisual({
               {percentage}%
             </p>
             <p className="font-label-sm text-label-sm text-on-surface-variant/80 mt-1.5">
-              Optimal Range
+              {percentage}% of SKUs in healthy range
             </p>
           </div>
         </div>
@@ -63,6 +63,10 @@ export default function SafeZoneVisual({
             />
           </div>
         </div>
+
+        <p className="font-body-sm text-body-sm text-on-surface-variant/60 text-center mt-4 leading-snug">
+          Based on days of stock coverage across all active SKUs.
+        </p>
       </div>
     </div>
   );
