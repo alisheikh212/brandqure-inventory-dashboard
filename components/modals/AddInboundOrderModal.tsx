@@ -270,7 +270,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
           <button
             type="button"
             onClick={addRow}
-            className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-dashed border-outline-variant/45 bg-white/25 text-on-surface-variant font-label-sm text-label-sm hover:border-primary/50 hover:text-primary hover:bg-white/45 backdrop-blur-sm transition-all"
+            className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full border border-dashed border-outline-variant/45 bg-white/[0.05] text-on-surface-variant font-label-sm text-label-sm hover:border-tertiary/50 hover:text-tertiary hover:bg-white/[0.09] backdrop-blur-sm transition-all"
           >
             <span className="material-symbols-outlined text-[16px]">add</span>
             Add Another Row

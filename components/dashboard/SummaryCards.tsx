@@ -16,7 +16,7 @@ function IconBubble({
   iconClass: string;
 }) {
   return (
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border border-white/40 shadow-sm ${bgClass}`}>
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border border-white/[0.08] shadow-sm ${bgClass}`}>
       <span className={`material-symbols-outlined text-[20px] ${iconClass}`}>
         {icon}
       </span>
@@ -57,7 +57,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="inventory"
-            bgClass="bg-white/55"
+            bgClass="bg-[#282828]/90"
             iconClass="text-on-surface-variant"
           />
         </div>
@@ -82,8 +82,8 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
           </p>
           <IconBubble
             icon="shopping_cart"
-            bgClass="bg-amber-50/70"
-            iconClass="text-[#b45309]"
+            bgClass="bg-[#3d1500]/80"
+            iconClass="text-[#fbbf24]"
           />
         </div>
         <div>
@@ -140,7 +140,7 @@ export default function SummaryCards({ stats, clientSlug }: SummaryCardsProps) {
             {stats.healthScore}%
           </p>
           {/* Mini health bar */}
-          <div className="mt-3 w-full bg-white/50 border border-white/40 h-1.5 rounded-full overflow-hidden">
+          <div className="mt-3 w-full bg-[#282828]/80 border border-white/[0.08] h-1.5 rounded-full overflow-hidden">
             <div
               className={`${healthBarColor} h-full rounded-full transition-all`}
               style={{ width: `${stats.healthScore}%` }}

@@ -51,7 +51,7 @@ export default async function AdminPage() {
           type="text"
           placeholder="Search clients..."
           readOnly
-          className="w-full pl-10 pr-4 py-2 border border-white/60 rounded-xl bg-white/65 backdrop-blur-sm font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all shadow-sm"
+          className="w-full pl-10 pr-4 py-2 border border-white/[0.09] rounded-xl bg-[#1d1d1d]/80 backdrop-blur-sm font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-tertiary/20 focus:border-tertiary/40 transition-all"
         />
       </div>
 
@@ -73,7 +73,7 @@ export default async function AdminPage() {
               {/* Client identity */}
               <div className="flex items-start justify-between mb-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/60 border border-white/50 shadow-sm flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-[#282828]/90 border border-white/[0.10] shadow-sm flex items-center justify-center flex-shrink-0">
                     <span className="font-headline-md text-headline-md text-on-surface-variant">
                       {client.logoInitial}
                     </span>
@@ -93,7 +93,7 @@ export default async function AdminPage() {
               </div>
 
               {/* Static config stats */}
-              <div className="grid grid-cols-2 gap-4 border-t border-white/40 pt-4">
+              <div className="grid grid-cols-2 gap-4 border-t border-white/[0.07] pt-4">
                 <div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                     Default Lead Time
@@ -114,17 +114,17 @@ export default async function AdminPage() {
             </Link>
 
             {/* Admin action strip */}
-            <div className="flex items-center gap-2 px-6 py-3 border-t border-white/35 bg-white/20">
+            <div className="flex items-center gap-2 px-6 py-3 border-t border-white/[0.06] bg-[#1a1a1a]/30">
               <Link
                 href={`/admin/clients/${client.clientSlug}/edit`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/60 bg-white/50 font-label-sm text-label-sm text-on-surface-variant hover:border-primary/40 hover:text-primary hover:bg-white/70 backdrop-blur-sm transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.09] bg-white/[0.05] font-label-sm text-label-sm text-on-surface-variant hover:border-tertiary/40 hover:text-tertiary hover:bg-white/[0.09] backdrop-blur-sm transition-all"
               >
                 <span className="material-symbols-outlined text-[14px]">edit</span>
                 Edit
               </Link>
               <Link
                 href={`/admin/clients/${client.clientSlug}/users/new`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/60 bg-white/50 font-label-sm text-label-sm text-on-surface-variant hover:border-primary/40 hover:text-primary hover:bg-white/70 backdrop-blur-sm transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.09] bg-white/[0.05] font-label-sm text-label-sm text-on-surface-variant hover:border-tertiary/40 hover:text-tertiary hover:bg-white/[0.09] backdrop-blur-sm transition-all"
               >
                 <span className="material-symbols-outlined text-[14px]">person_add</span>
                 Create Login

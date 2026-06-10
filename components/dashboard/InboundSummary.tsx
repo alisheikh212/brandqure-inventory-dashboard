@@ -8,11 +8,11 @@ interface InboundSummaryProps {
 }
 
 const MARKETPLACE_COLORS: Record<string, string> = {
-  "Amazon USA": "bg-[#fff3e0] text-[#e65100]",
-  "Amazon Canada": "bg-[#e8f5e9] text-[#1b5e20]",
-  "Amazon UK": "bg-[#e8eaf6] text-[#283593]",
-  Shopify: "bg-[#f3e5f5] text-[#4a148c]",
-  Walmart: "bg-[#e3f2fd] text-[#0d47a1]",
+  "Amazon USA": "bg-[#3d1000]/70 text-[#fb923c]",
+  "Amazon Canada": "bg-[#0a2d0a]/70 text-[#4ade80]",
+  "Amazon UK": "bg-[#0d1a3d]/70 text-[#93c5fd]",
+  Shopify: "bg-[#2d0a3d]/70 text-[#d8b4fe]",
+  Walmart: "bg-[#0a1e3d]/70 text-[#7dd3fc]",
 };
 
 function daysFromToday(dateStr: string): number {
@@ -42,7 +42,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
   return (
     <div className="glass-panel lg:col-span-1 overflow-hidden flex flex-col h-[480px]">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/40 flex items-center gap-2">
+      <div className="px-5 py-4 border-b border-white/[0.07] flex items-center gap-2">
         <span className="material-symbols-outlined text-[20px] text-primary">
           move_to_inbox
         </span>
@@ -66,7 +66,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
           {/* Active App-Created Orders — counting in reorder formula */}
           {hasActiveOrders && (
             <div>
-              <div className="px-5 py-2 bg-white/30 border-b border-white/35 flex items-center gap-2">
+              <div className="px-5 py-2 bg-[#1d1d1d]/40 border-b border-white/[0.06] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[13px] text-secondary">
                   check_circle
                 </span>
@@ -98,9 +98,9 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                         <span
                           className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-sm text-label-sm ${
                             isInBuffer
-                              ? "bg-[#fef3c7] text-[#92400e] border border-[#fbbf24]/40"
+                              ? "bg-[#3d1500]/60 text-[#fbbf24] border border-[#fbbf24]/30"
                               : isToday
-                              ? "bg-[#e8f5e9] text-[#1b5e20]"
+                              ? "bg-[#003d1a]/60 text-[#4ade80]"
                               : "bg-surface-container text-on-surface-variant"
                           }`}
                         >
@@ -135,14 +135,14 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
           {/* Expired App Orders — past buffer, no longer in reorder formula */}
           {hasExpiredOrders && (
             <div>
-              <div className="px-5 py-2 bg-white/20 border-b border-white/30 flex items-center gap-2">
+              <div className="px-5 py-2 bg-[#1a1a1a]/30 border-b border-white/[0.05] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[13px] text-outline">
                   history
                 </span>
                 <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider">
                   Past Orders
                 </p>
-                <span className="ml-auto font-label-sm text-label-sm text-outline bg-white/40 border border-outline-variant/40 px-1.5 py-0.5 rounded-full">
+                <span className="ml-auto font-label-sm text-label-sm text-outline bg-[#282828]/80 border border-white/[0.08] px-1.5 py-0.5 rounded-full">
                   Not in reorder
                 </span>
               </div>
@@ -186,7 +186,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
           {/* Sheet Inbound (Google Sheets col F) — no dates */}
           {hasSheetInbound && (
             <div>
-              <div className="px-5 py-2 bg-white/30 border-b border-white/35 flex items-center gap-2">
+              <div className="px-5 py-2 bg-[#1d1d1d]/40 border-b border-white/[0.06] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[13px] text-secondary">
                   table_chart
                 </span>

@@ -28,7 +28,7 @@ export default function InventoryHealthVisual({
             Top {Math.min(TOP_N, top.length)} of {totalSKUs} SKUs by FBA units
           </p>
         </div>
-        <span className="px-2.5 py-1 rounded-full border border-white/50 bg-white/50 backdrop-blur-sm font-label-sm text-label-sm text-on-surface-variant shadow-sm">
+        <span className="px-2.5 py-1 rounded-full border border-white/[0.09] bg-[#282828]/90 backdrop-blur-sm font-label-sm text-label-sm text-on-surface-variant shadow-sm">
           Live data
         </span>
       </div>
@@ -57,7 +57,7 @@ export default function InventoryHealthVisual({
                 </div>
 
                 {/* Bar */}
-                <div className="flex-1 h-6 bg-white/30 border border-white/40 rounded-md overflow-hidden relative shadow-[inset_0_1px_3px_rgba(17,28,45,0.05)]">
+                <div className="flex-1 h-6 bg-[#1d1d1d]/80 border border-white/[0.08] rounded-md overflow-hidden relative">
                   <div
                     className={`h-full rounded-md transition-all duration-500 ${
                       isLow

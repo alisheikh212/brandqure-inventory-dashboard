@@ -6,7 +6,7 @@ const INVENTORY_BADGE_STYLES: Record<InventoryStatus, string> = {
   "Out of Stock":
     "border border-error/40 bg-error-container/65 text-on-error-container backdrop-blur-sm",
   "Low Stock":
-    "border border-outline-variant/50 bg-white/55 text-on-surface backdrop-blur-sm",
+    "border border-outline-variant/50 bg-surface-container-high/80 text-on-surface backdrop-blur-sm",
   Healthy:
     "border border-secondary/25 bg-secondary-fixed/55 text-on-secondary-fixed backdrop-blur-sm",
   Overstock:

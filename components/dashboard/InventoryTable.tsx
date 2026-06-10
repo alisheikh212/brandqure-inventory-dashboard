@@ -28,7 +28,7 @@ function DaysUntilOOS({ row }: { row: InventoryRow }) {
   }
   if (!isFinite(days) || days > 90) {
     return (
-      <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-outline-variant/30 bg-white/50 font-label-sm text-label-sm text-on-surface-variant backdrop-blur-sm">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-outline-variant/30 bg-[#282828]/80 font-label-sm text-label-sm text-on-surface-variant backdrop-blur-sm">
         90+ Days
       </span>
     );
@@ -112,12 +112,12 @@ export default function InventoryTable({
   return (
     <div className="glass-panel lg:col-span-3 overflow-hidden flex flex-col" style={{ height: 520 }}>
       {/* Card header */}
-      <div className="px-6 pt-5 pb-4 border-b border-white/40 bg-white/30 backdrop-blur-sm flex-shrink-0">
+      <div className="px-6 pt-5 pb-4 border-b border-white/[0.07] bg-[#1d1d1d]/40 backdrop-blur-sm flex-shrink-0">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-headline-md text-headline-md text-on-surface">
             SKU Health Monitor
           </h3>
-          <span className="px-3 py-1 rounded-full bg-white/60 border border-white/50 font-label-sm text-label-sm text-on-surface-variant shadow-sm">
+          <span className="px-3 py-1 rounded-full bg-[#282828]/90 border border-white/[0.10] font-label-sm text-label-sm text-on-surface-variant shadow-sm">
             {processed.length} SKUs
           </span>
         </div>
@@ -134,7 +134,7 @@ export default function InventoryTable({
               placeholder="Search SKU or product…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm"
+              className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-[#1d1d1d]/80 border border-white/[0.10] rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm"
             />
           </div>
 
@@ -143,7 +143,7 @@ export default function InventoryTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
+              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-[#1d1d1d]/80 border border-white/[0.10] rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Reorder Now">Reorder Now</option>
@@ -161,7 +161,7 @@ export default function InventoryTable({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-white/60 border border-white/55 rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
+              className="appearance-none pl-3 pr-7 py-1.5 text-[13px] bg-[#1d1d1d]/80 border border-white/[0.10] rounded-lg text-on-surface focus:outline-none focus:border-secondary-container/50 focus:ring-1 focus:ring-secondary-container/20 transition-all backdrop-blur-sm cursor-pointer"
             >
               <option value="oos-asc">Closest to OOS</option>
               <option value="fba-desc">Highest FBA Stock</option>
@@ -178,7 +178,7 @@ export default function InventoryTable({
             <button
               type="button"
               onClick={() => { setSearch(""); setStatusFilter("All"); setSortBy("oos-asc"); }}
-              className="px-2.5 py-1.5 text-[12px] text-on-surface-variant/70 hover:text-on-surface border border-white/40 bg-white/40 hover:bg-white/60 rounded-lg backdrop-blur-sm transition-all"
+              className="px-2.5 py-1.5 text-[12px] text-on-surface-variant/70 hover:text-on-surface border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.10] rounded-lg backdrop-blur-sm transition-all"
             >
               Clear
             </button>
@@ -189,7 +189,7 @@ export default function InventoryTable({
       {/* Scrollable table */}
       <div className="overflow-auto flex-1">
         <table className="w-full text-left border-collapse min-w-[820px]">
-          <thead className="bg-white/60 backdrop-blur-sm sticky top-0 z-10">
+          <thead className="bg-[#141414]/95 backdrop-blur-sm sticky top-0 z-10">
             <tr>
               {[
                 "SKU / Product",
@@ -203,7 +203,7 @@ export default function InventoryTable({
               ].map((col) => (
                 <th
                   key={col}
-                  className="px-5 py-3.5 font-label-sm text-label-sm text-on-surface-variant/85 uppercase tracking-widest border-b border-white/40 whitespace-nowrap"
+                  className="px-5 py-3.5 font-label-sm text-label-sm text-on-surface-variant/85 uppercase tracking-widest border-b border-white/[0.07] whitespace-nowrap"
                 >
                   {col}
                 </th>
@@ -227,8 +227,8 @@ export default function InventoryTable({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-outline-variant/20 transition-colors hover:bg-white/60 ${
-                      isUrgent ? "bg-red-50/55" : ""
+                    className={`border-b border-outline-variant/20 transition-colors hover:bg-white/[0.04] ${
+                      isUrgent ? "bg-error/[0.07]" : ""
                     }`}
                   >
                     {/* SKU / Product */}
@@ -246,7 +246,7 @@ export default function InventoryTable({
 
                     {/* Marketplace */}
                     <td className="px-5 py-4">
-                      <span className="px-2.5 py-1 rounded-full border border-outline-variant/30 bg-white/60 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap shadow-[0_1px_3px_rgba(17,28,45,0.06)]">
+                      <span className="px-2.5 py-1 rounded-full border border-outline-variant/30 bg-[#282828]/80 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">
                         {row.marketplace}
                       </span>
                     </td>

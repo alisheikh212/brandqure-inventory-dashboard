@@ -106,7 +106,7 @@ function AlertTile({
   subLabel,
 }: AlertTileProps) {
   return (
-    <div className="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+    <div className="bg-surface-container-high rounded-2xl border border-white/[0.07] shadow-sm overflow-hidden">
       <div className={`h-[3px] ${accentColor}`} />
       <div className="p-6 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
             className={`px-4 py-1.5 rounded-full font-label-md text-label-md transition-all duration-150 ${
               activeMarketplace === mp
                 ? "bg-primary text-white border border-primary shadow-sm"
-                : "border border-outline-variant bg-white text-on-surface hover:bg-surface-container-low hover:border-outline"
+                : "border border-white/[0.09] bg-surface-container-high text-on-surface hover:bg-surface-container-highest hover:border-white/[0.15]"
             }`}
           >
             {mp}
@@ -223,7 +223,7 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
       </div>
 
       {/* Reorder table */}
-      <div className="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+      <div className="bg-surface-container-high rounded-2xl border border-white/[0.07] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[920px]">
 
@@ -267,12 +267,12 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                   const appActiveUnits = activeInboundMap.get(row.sku) ?? 0;
                   const recQty = recommendedReorderQty(row, appActiveUnits);
                   const rowBg =
-                    status === "Reorder Now" ? "bg-[#fff8f8]" : "";
+                    status === "Reorder Now" ? "bg-error/[0.06]" : "";
 
                   return (
                     <tr
                       key={row.id}
-                      className={`transition-colors hover:bg-[#f8f9fc] ${rowBg}`}
+                      className={`transition-colors hover:bg-white/[0.03] ${rowBg}`}
                     >
                       {/* SKU / Product */}
                       <td className="px-6 py-5">

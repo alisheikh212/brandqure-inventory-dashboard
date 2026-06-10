@@ -70,7 +70,7 @@ export default function DashboardContent({
                 client.stockStatus === "Optimal" || client.stockStatus === "Good"
                   ? "border-secondary/25 bg-secondary-fixed/50 text-on-secondary-fixed"
                   : client.stockStatus === "Review"
-                  ? "border-[#f59e0b]/30 bg-[#fffbeb]/70 text-[#b45309]"
+                  ? "border-[#f59e0b]/30 bg-[#3d1500]/50 text-[#fbbf24]"
                   : "border-error/30 bg-error-container/50 text-on-error-container"
               }`}>
                 {client.stockStatus}
@@ -92,7 +92,7 @@ export default function DashboardContent({
                   className={`px-3 py-1.5 rounded-full font-label-sm text-label-sm transition-all duration-150 ${
                     activeMarketplace === mp
                       ? "border border-secondary-container/70 bg-secondary-fixed/65 text-primary font-semibold backdrop-blur-sm shadow-sm"
-                      : "border border-white/55 bg-white/50 text-on-surface-variant hover:bg-white/75 hover:text-on-surface backdrop-blur-sm"
+                      : "border border-white/[0.09] bg-white/[0.05] text-on-surface-variant hover:bg-white/[0.11] hover:text-on-surface backdrop-blur-sm"
                   }`}
                 >
                   {mp}
@@ -107,7 +107,7 @@ export default function DashboardContent({
             <button
               type="button"
               onClick={() => setModal({ type: "add-inbound" })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-on-tertiary-fixed-variant to-primary text-white font-label-md text-label-md shadow-md hover:shadow-lg hover:opacity-95 hover:-translate-y-px transition-all duration-150"
+              className="btn-primary-indigo"
             >
               <span className="material-symbols-outlined text-[17px]">add</span>
               Add Inbound Order
@@ -118,7 +118,7 @@ export default function DashboardContent({
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/55 bg-white/50 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/75 hover:text-on-surface backdrop-blur-sm shadow-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/[0.09] bg-white/[0.05] text-on-surface-variant font-label-sm text-label-sm hover:bg-white/[0.11] hover:text-on-surface backdrop-blur-sm shadow-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className={`material-symbols-outlined text-[16px] ${isRefreshing ? "animate-spin" : ""}`}>
                 sync
@@ -130,14 +130,14 @@ export default function DashboardContent({
             <div className="flex items-center gap-1">
               <Link
                 href={`/dashboard/${client.slug}/reorder`}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/45 bg-white/35 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/60 hover:text-on-surface backdrop-blur-sm transition-all duration-150"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/[0.09] bg-white/[0.05] text-on-surface-variant font-label-sm text-label-sm hover:bg-white/[0.11] hover:text-on-surface backdrop-blur-sm transition-all duration-150"
               >
                 <span className="material-symbols-outlined text-[15px]">shopping_cart</span>
                 Reorder
               </Link>
               <Link
                 href={`/dashboard/${client.slug}/print`}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/45 bg-white/35 text-on-surface-variant font-label-sm text-label-sm hover:bg-white/60 hover:text-on-surface backdrop-blur-sm transition-all duration-150"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/[0.09] bg-white/[0.05] text-on-surface-variant font-label-sm text-label-sm hover:bg-white/[0.11] hover:text-on-surface backdrop-blur-sm transition-all duration-150"
               >
                 <span className="material-symbols-outlined text-[15px]">print</span>
                 Report
@@ -168,7 +168,7 @@ export default function DashboardContent({
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/40 bg-white/30 backdrop-blur-sm py-6">
+      <footer className="border-t border-white/[0.06] py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-3 px-4 md:px-8 max-w-[1440px] mx-auto">
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             Powered by BrandQure © 2026 • Last updated: {client.lastUpdated}

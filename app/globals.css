@@ -2,68 +2,69 @@
 
 /* ============================================================
    BrandQure Design System — Tailwind v4 Theme Tokens
-   Source: stitch-reference/premium_executive_interface/DESIGN.md
+   Inventory Command Deck — Dark Theme (Dimensions palette)
+   Void #0a0a0a · Char #1d1d1d · Bone #e5e5e5 · Mist #c2c2c2
    ============================================================ */
 
 @theme {
-  /* === Primary === */
-  --color-primary: #000000;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #131b2e;
-  --color-on-primary-container: #7c839b;
-  --color-primary-fixed: #dae2fd;
-  --color-primary-fixed-dim: #bec6e0;
-  --color-on-primary-fixed: #131b2e;
+  /* === Primary (Bone — dominant text / identity on dark canvas) === */
+  --color-primary: #e5e5e5;
+  --color-on-primary: #0a0a0a;
+  --color-primary-container: #1d1d1d;
+  --color-on-primary-container: #c2c2c2;
+  --color-primary-fixed: #3d3d3d;
+  --color-primary-fixed-dim: #282828;
+  --color-on-primary-fixed: #e5e5e5;
   --color-on-primary-fixed-variant: #3f465c;
-  --color-inverse-primary: #bec6e0;
+  --color-inverse-primary: #282828;
 
-  /* === Secondary (Teal) === */
-  --color-secondary: #00668a;
-  --color-on-secondary: #ffffff;
+  /* === Secondary (Teal data accent) === */
+  --color-secondary: #40c2fd;
+  --color-on-secondary: #001e2c;
   --color-secondary-container: #40c2fd;
-  --color-on-secondary-container: #004d6a;
-  --color-secondary-fixed: #c4e7ff;
-  --color-secondary-fixed-dim: #7bd0ff;
-  --color-on-secondary-fixed: #001e2c;
-  --color-on-secondary-fixed-variant: #004c69;
+  --color-on-secondary-container: #001e2c;
+  --color-secondary-fixed: #003851;
+  --color-secondary-fixed-dim: #005e87;
+  --color-on-secondary-fixed: #67e8f9;
+  --color-on-secondary-fixed-variant: #40c2fd;
 
-  /* === Tertiary (Indigo) === */
-  --color-tertiary: #000000;
-  --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #07006c;
-  --color-on-tertiary-container: #7073ff;
-  --color-tertiary-fixed: #e1e0ff;
-  --color-tertiary-fixed-dim: #c0c1ff;
-  --color-on-tertiary-fixed: #07006c;
-  --color-on-tertiary-fixed-variant: #2f2ebe;
+  /* === Tertiary (Indigo atmospheric) === */
+  --color-tertiary: #8b82ff;
+  --color-on-tertiary: #0a0a0a;
+  --color-tertiary-container: #1a1766;
+  --color-on-tertiary-container: #a09aff;
+  --color-tertiary-fixed: #2d2a80;
+  --color-tertiary-fixed-dim: #4845b0;
+  --color-on-tertiary-fixed: #c0c1ff;
+  --color-on-tertiary-fixed-variant: #8b82ff;
 
   /* === Error === */
-  --color-error: #ba1a1a;
+  --color-error: #ef4444;
   --color-on-error: #ffffff;
-  --color-error-container: #ffdad6;
-  --color-on-error-container: #93000a;
+  --color-error-container: #7f1d1d;
+  --color-on-error-container: #fca5a5;
 
-  /* === Surface Scale === */
-  --color-background: #f9f9ff;
-  --color-on-background: #111c2d;
-  --color-surface: #f9f9ff;
-  --color-on-surface: #111c2d;
-  --color-surface-variant: #d8e3fb;
-  --color-on-surface-variant: #45464d;
-  --color-surface-dim: #cfdaf2;
-  --color-surface-bright: #f9f9ff;
-  --color-surface-tint: #565e74;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f0f3ff;
-  --color-surface-container: #e7eeff;
-  --color-surface-container-high: #dee8ff;
-  --color-surface-container-highest: #d8e3fb;
-  --color-inverse-surface: #263143;
-  --color-inverse-on-surface: #ecf1ff;
+  /* === Surface Scale (Void → Char dark canvas) === */
+  --color-background: #0a0a0a;
+  --color-on-background: #e5e5e5;
+  --color-surface: #0a0a0a;
+  --color-on-surface: #e5e5e5;
+  --color-surface-variant: #1d1d1d;
+  --color-on-surface-variant: #c2c2c2;
+  --color-surface-dim: #080808;
+  --color-surface-bright: #282828;
+  --color-surface-tint: #6b62f2;
+  --color-surface-container-lowest: #080808;
+  --color-surface-container-low: #111111;
+  --color-surface-container: #161616;
+  --color-surface-container-high: #1d1d1d;
+  --color-surface-container-highest: #282828;
+  --color-inverse-surface: #e5e5e5;
+  --color-inverse-on-surface: #0a0a0a;
 
-  /* === Outline === */
-  --color-outline: #76777d;
-  --color-outline-variant: #c6c6cd;
+  /* === Outline (dark hairlines) === */
+  --color-outline: #505050;
+  --color-outline-variant: #2d2d2d;
 
   /* === Font === */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -140,50 +141,50 @@
    Global Component Utilities (Stitch Design System)
    ============================================================ */
 @layer utilities {
-  /* ── App background: layered gradient for depth ── */
+  /* ── App background: Void canvas with atmospheric indigo glow ── */
   .app-bg {
-    background-color: #eaeefc;
+    background-color: #0a0a0a;
     background-image:
-      radial-gradient(ellipse at 78% 6%, rgba(185, 196, 238, 0.45) 0%, transparent 52%),
-      radial-gradient(ellipse at 10% 90%, rgba(110, 185, 238, 0.20) 0%, transparent 48%);
+      radial-gradient(ellipse at 75% 8%, rgba(107, 98, 242, 0.09) 0%, transparent 55%),
+      radial-gradient(ellipse at 15% 88%, rgba(64, 194, 253, 0.05) 0%, transparent 50%);
     min-height: 100vh;
   }
 
-  /* ── Glass panel: replaces flat white cards ── */
+  /* ── Glass panel: dark Char glass card ── */
   .glass-panel {
-    background: rgba(255, 255, 255, 0.74);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.58);
+    background: rgba(29, 29, 29, 0.82);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow:
-      0 4px 24px -4px rgba(17, 28, 45, 0.09),
-      0 1px 4px rgba(17, 28, 45, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      0 4px 24px -4px rgba(0, 0, 0, 0.45),
+      0 1px 4px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     transition: box-shadow 0.2s ease;
   }
 
   /* ── Glass header: floating top bar ── */
   .glass-header {
-    background: rgba(255, 255, 255, 0.84);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(220, 224, 240, 0.6);
+    background: rgba(14, 14, 14, 0.90);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
-      0 1px 0 rgba(17, 28, 45, 0.05),
-      0 4px 20px -4px rgba(17, 28, 45, 0.07);
+      0 1px 0 rgba(0, 0, 0, 0.30),
+      0 4px 20px -4px rgba(0, 0, 0, 0.35);
   }
 
   /* ── Glass modal panel ── */
   .glass-modal {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.68);
+    background: rgba(22, 22, 22, 0.96);
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 32px 64px -12px rgba(17, 28, 45, 0.20),
-      0 8px 24px -4px rgba(17, 28, 45, 0.10),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      0 32px 64px -12px rgba(0, 0, 0, 0.65),
+      0 8px 24px -4px rgba(0, 0, 0, 0.40),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
     border-radius: 20px;
   }
 
@@ -201,7 +202,7 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
 
-  /* Sidebar: premium deep navy gradient */
+  /* Sidebar: premium deep navy gradient (unchanged — already dark) */
   .glass-sidebar {
     background: linear-gradient(160deg, #0d1628 0%, #0f1c30 55%, #0a1220 100%);
     backdrop-filter: blur(16px);
@@ -212,22 +213,22 @@
 
   /* Dashboard chart/visual data cards */
   .data-card {
-    background: rgba(255, 255, 255, 0.74);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.58);
+    background: rgba(29, 29, 29, 0.82);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow:
-      0 4px 24px -4px rgba(17, 28, 45, 0.09),
-      0 1px 4px rgba(17, 28, 45, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      0 4px 24px -4px rgba(0, 0, 0, 0.45),
+      0 1px 4px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
     border-radius: 16px;
   }
 
   /* Client selection card shadow */
   .card-shadow {
     box-shadow:
-      0 2px 8px rgba(17, 28, 45, 0.07),
-      0 1px 3px rgba(17, 28, 45, 0.05);
+      0 2px 8px rgba(0, 0, 0, 0.40),
+      0 1px 3px rgba(0, 0, 0, 0.25);
   }
 
   /* Branded form input */
@@ -235,10 +236,10 @@
     width: 100%;
     height: 40px;
     padding: 0 12px;
-    background-color: rgba(255, 255, 255, 0.80);
-    border: 1px solid rgba(198, 198, 205, 0.70);
+    background-color: rgba(29, 29, 29, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 8px;
-    color: #111c2d;
+    color: #e5e5e5;
     font-size: 14px;
     line-height: 24px;
     transition: all 0.18s ease-in-out;
@@ -247,16 +248,16 @@
   }
   .brand-input:focus {
     outline: none;
-    border-color: rgba(47, 46, 190, 0.55);
-    box-shadow: 0 0 0 3px rgba(47, 46, 190, 0.12);
-    background-color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(107, 98, 242, 0.60);
+    box-shadow: 0 0 0 3px rgba(107, 98, 242, 0.15);
+    background-color: rgba(40, 40, 40, 0.95);
   }
   .brand-input::placeholder {
-    color: #9a9ba3;
+    color: #686868;
   }
   .brand-input:disabled,
   .brand-input[readonly] {
-    background-color: rgba(231, 238, 255, 0.60);
+    background-color: rgba(17, 17, 17, 0.60);
     cursor: not-allowed;
   }
 
@@ -322,20 +323,21 @@
     justify-content: center;
     gap: 6px;
     padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 9999px;
-    color: #111c2d;
+    color: #c2c2c2;
     font-size: 14px;
     font-weight: 500;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 1px 3px rgba(17, 28, 45, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
     transition: all 0.18s ease-in-out;
   }
   .btn-ghost-glass:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.65);
-    box-shadow: 0 2px 8px rgba(17, 28, 45, 0.10);
+    background: rgba(255, 255, 255, 0.10);
+    color: #e5e5e5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
   }
   .btn-ghost-glass:disabled {
     opacity: 0.45;
@@ -367,6 +369,40 @@
    Print Styles
    ============================================================ */
 @media print {
+  /* --- Revert dark tokens to original light values for clean PDF output --- */
+  :root {
+    --color-primary: #000000 !important;
+    --color-on-primary: #ffffff !important;
+    --color-secondary: #00668a !important;
+    --color-on-secondary: #ffffff !important;
+    --color-secondary-container: #40c2fd !important;
+    --color-secondary-fixed: #c4e7ff !important;
+    --color-secondary-fixed-dim: #7bd0ff !important;
+    --color-on-secondary-fixed: #001e2c !important;
+    --color-on-secondary-fixed-variant: #004c69 !important;
+    --color-tertiary: #000000 !important;
+    --color-on-tertiary-fixed-variant: #2f2ebe !important;
+    --color-error: #ba1a1a !important;
+    --color-on-error: #ffffff !important;
+    --color-error-container: #ffdad6 !important;
+    --color-on-error-container: #93000a !important;
+    --color-background: #f9f9ff !important;
+    --color-on-background: #111c2d !important;
+    --color-surface: #ffffff !important;
+    --color-on-surface: #111c2d !important;
+    --color-surface-variant: #d8e3fb !important;
+    --color-on-surface-variant: #45464d !important;
+    --color-surface-dim: #cfdaf2 !important;
+    --color-surface-bright: #f9f9ff !important;
+    --color-surface-container-lowest: #ffffff !important;
+    --color-surface-container-low: #f0f3ff !important;
+    --color-surface-container: #e7eeff !important;
+    --color-surface-container-high: #dee8ff !important;
+    --color-surface-container-highest: #d8e3fb !important;
+    --color-outline: #76777d !important;
+    --color-outline-variant: #c6c6cd !important;
+  }
+
   /* --- Hide shell chrome --- */
   .print-hidden {
     display: none !important;

@@ -19,7 +19,7 @@ export default function SafeZoneVisual({
           {/* Outer glow ring */}
           <div className="absolute inset-0 rounded-full shadow-[0_0_24px_rgba(64,194,253,0.18),inset_0_2px_8px_rgba(17,28,45,0.06)]" />
           {/* Track ring */}
-          <div className="absolute inset-0 rounded-full border-[10px] border-white/35" />
+          <div className="absolute inset-0 rounded-full border-[10px] border-white/[0.08]" />
           {/* Active ring */}
           <div className="absolute inset-0 rounded-full border-[10px] border-secondary-container border-t-transparent border-r-transparent rotate-45 drop-shadow-sm" />
           <div className="text-center z-10">
@@ -50,7 +50,7 @@ export default function SafeZoneVisual({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-white/40 border border-white/40 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-[#282828]/80 border border-white/[0.08] rounded-full h-2 overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-error via-secondary-container to-outline-variant/50"
               style={{ width: "100%" }}
