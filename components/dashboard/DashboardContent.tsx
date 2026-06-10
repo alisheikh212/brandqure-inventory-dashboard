@@ -7,7 +7,6 @@ import type {
   InventoryRow,
   MarketplaceFilter,
 } from "@/lib/mock-data";
-import { MARKETPLACES } from "@/lib/mock-data";
 import type { SummaryStats } from "@/lib/mock-data";
 import SummaryCards from "./SummaryCards";
 import InventoryHealthVisual from "./InventoryHealthVisual";
@@ -83,7 +82,7 @@ export default function DashboardContent({
           <div className="flex items-center gap-3 flex-wrap">
             {/* Marketplace filter pills */}
             <div className="flex items-center gap-1.5">
-              {MARKETPLACES.filter((m) => m !== "All").map((mp) => (
+              {client.enabledMarketplaces.map((mp) => (
                 <button
                   key={mp}
                   type="button"

@@ -41,6 +41,7 @@ export interface Client {
   /** Default lead time in days applied to all SKUs unless overridden */
   defaultLeadTimeDays: number;
   lastUpdated: string;
+  enabledMarketplaces: Marketplace[];
 }
 
 export interface InventoryRow {
@@ -161,6 +162,7 @@ export const CLIENTS: Client[] = [
     stockStatus: "Good",
     defaultLeadTimeDays: 21,
     lastUpdated: "2026-05-14",
+    enabledMarketplaces: ["Amazon USA", "Amazon Canada", "Amazon UK", "Shopify", "Walmart"],
   },
   {
     id: "c-002",
@@ -173,6 +175,7 @@ export const CLIENTS: Client[] = [
     stockStatus: "Review",
     defaultLeadTimeDays: 28,
     lastUpdated: "2026-05-13",
+    enabledMarketplaces: ["Amazon USA", "Amazon Canada", "Amazon UK", "Shopify", "Walmart"],
   },
   {
     id: "c-003",
@@ -185,6 +188,7 @@ export const CLIENTS: Client[] = [
     stockStatus: "Review",
     defaultLeadTimeDays: 35,
     lastUpdated: "2026-05-12",
+    enabledMarketplaces: ["Amazon USA", "Amazon Canada", "Amazon UK", "Shopify", "Walmart"],
   },
   {
     id: "c-004",
@@ -197,6 +201,7 @@ export const CLIENTS: Client[] = [
     stockStatus: "Review",
     defaultLeadTimeDays: 21,
     lastUpdated: "2026-05-14",
+    enabledMarketplaces: ["Amazon USA", "Amazon Canada", "Amazon UK", "Shopify", "Walmart"],
   },
 ];
 

@@ -45,6 +45,7 @@ function toClientShape(
     stockStatus,
     defaultLeadTimeDays: config.defaultLeadTimeDays,
     lastUpdated: lastUpdated || new Date().toISOString().split("T")[0],
+    enabledMarketplaces: config.enabledMarketplaces as Client["enabledMarketplaces"],
   };
 }
 
