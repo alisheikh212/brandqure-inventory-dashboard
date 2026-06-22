@@ -6,7 +6,7 @@ import type { ClientConfig } from '@/lib/clients'
 import Link from 'next/link'
 
 const TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const MARKETPLACES = ['Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart'] as const
+const MARKETPLACES = ['Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart'] as const
 
 interface Props {
   client: ClientConfig

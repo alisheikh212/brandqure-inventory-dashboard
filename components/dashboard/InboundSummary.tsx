@@ -8,11 +8,11 @@ interface InboundSummaryProps {
 }
 
 const MARKETPLACE_COLORS: Record<string, string> = {
-  "Amazon USA": "bg-[#3d1000]/70 text-[#fb923c]",
-  "Amazon Canada": "bg-[#0a2d0a]/70 text-[#4ade80]",
-  "Amazon UK": "bg-[#0d1a3d]/70 text-[#93c5fd]",
-  Shopify: "bg-[#2d0a3d]/70 text-[#d8b4fe]",
-  Walmart: "bg-[#0a1e3d]/70 text-[#7dd3fc]",
+  "Amazon.com": "bg-[#3d1000]/70 text-[#fb923c]",
+  "Amazon.ca":  "bg-[#0a2d0a]/70 text-[#4ade80]",
+  "Amazon UK":  "bg-[#0d1a3d]/70 text-[#93c5fd]",
+  "Shopify":    "bg-[#2d0a3d]/70 text-[#d8b4fe]",
+  "Walmart":    "bg-[#0a1e3d]/70 text-[#7dd3fc]",
 };
 
 function daysFromToday(dateStr: string): number {
@@ -227,12 +227,6 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
         </div>
       )}
 
-      {/* Footer */}
-      <div className="px-5 py-3 border-t border-white/40">
-        <p className="font-label-sm text-label-sm text-on-surface-variant">
-          Active app orders credited in reorder math · Expired after +10 days past arrival
-        </p>
-      </div>
     </div>
   );
 }

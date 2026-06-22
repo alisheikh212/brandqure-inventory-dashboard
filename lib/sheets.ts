@@ -2,6 +2,7 @@ import 'server-only'
 import crypto from 'crypto'
 import { unstable_cache } from 'next/cache'
 import type { InventoryRow, Marketplace } from '@/lib/mock-data'
+import { normalizeMarketplace } from '@/lib/mock-data'
 import { deriveInventoryStatus } from '@/lib/reorder'
 import type { ClientConfig } from '@/lib/clients'
 
@@ -78,8 +79,11 @@ async function fetchSheetRows(
   return json.values ?? []
 }
 
-const VALID_MARKETPLACES = new Set<string>([
-  'Amazon USA', 'Amazon Canada', 'Amazon UK', 'Shopify', 'Walmart',
+// Canonical marketplace values after normalization.
+// Legacy values ("Amazon USA", "Amazon Canada") are accepted by normalizeMarketplace()
+// and converted to "Amazon.com" / "Amazon.ca" before this check.
+const VALID_MARKETPLACES = new Set<Marketplace>([
+  'Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart',
 ])
 
 function parseSheetRows(
@@ -102,9 +106,11 @@ function parseSheetRows(
       const asin           = row[1]?.trim() ?? ''
       const productName    = row[2]?.trim() ?? ''
       const marketplaceRaw = row[3]?.trim() ?? ''
-      const marketplace: Marketplace = VALID_MARKETPLACES.has(marketplaceRaw)
-        ? (marketplaceRaw as Marketplace)
-        : 'Amazon USA'
+      // Normalize handles both legacy ("Amazon USA") and current ("Amazon.com") values.
+      const normalized = normalizeMarketplace(marketplaceRaw)
+      const marketplace: Marketplace = VALID_MARKETPLACES.has(normalized)
+        ? normalized
+        : 'Amazon.com'
       const fbaAvailable  = parseInt(row[4] ?? '0', 10) || 0
       const inboundUnits  = parseInt(row[5] ?? '0', 10) || 0
       const reservedUnits = parseInt(row[6] ?? '0', 10) || 0

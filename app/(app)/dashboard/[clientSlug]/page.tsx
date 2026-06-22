@@ -4,7 +4,10 @@ import { getClientConfig } from "@/lib/clients";
 import { getInventoryFromSheet } from "@/lib/sheets";
 import { computeSummaryStats } from "@/lib/reorder";
 import { getPendingInboundOrders } from "@/app/actions/inbound-orders";
-import type { Client, StockStatus, InventoryRow } from "@/lib/mock-data";
+import type { Client, StockStatus, InventoryRow, Marketplace } from "@/lib/mock-data";
+import { normalizeMarketplace } from "@/lib/mock-data";
+
+const VALID_MARKETPLACE_SET = new Set<string>(["Amazon.com", "Amazon.ca", "Amazon UK", "Shopify", "Walmart"]);
 import type { ClientConfig } from "@/lib/clients";
 import type { SummaryStats } from "@/lib/mock-data";
 import DashboardContent from "@/components/dashboard/DashboardContent";
@@ -45,7 +48,11 @@ function toClientShape(
     stockStatus,
     defaultLeadTimeDays: config.defaultLeadTimeDays,
     lastUpdated: lastUpdated || new Date().toISOString().split("T")[0],
-    enabledMarketplaces: config.enabledMarketplaces as Client["enabledMarketplaces"],
+    // Normalize Supabase strings ("Amazon.com", legacy "Amazon USA", etc.) to canonical Marketplace values.
+    // Filter to only values in the known set so unknown strings are dropped safely.
+    enabledMarketplaces: config.enabledMarketplaces
+      .map(normalizeMarketplace)
+      .filter((m): m is Marketplace => VALID_MARKETPLACE_SET.has(m)),
   };
 }
 

@@ -6,34 +6,34 @@ export default function SafeZoneVisual({
   percentage = 78,
 }: SafeZoneVisualProps) {
   return (
-    <div className="data-card p-6 flex flex-col h-[360px]">
+    <div className="data-card p-6 flex flex-col min-h-[360px]">
       <div className="flex justify-between items-center mb-5">
         <h3 className="font-headline-md text-headline-md text-on-surface tracking-tight">
           Inventory Health Score
         </h3>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center">
-        {/* CSS ring gauge */}
-        <div className="relative w-44 h-44 flex items-center justify-center">
-          {/* Outer glow ring */}
-          <div className="absolute inset-0 rounded-full shadow-[0_0_24px_rgba(64,194,253,0.18),inset_0_2px_8px_rgba(17,28,45,0.06)]" />
-          {/* Track ring */}
-          <div className="absolute inset-0 rounded-full border-[10px] border-white/[0.08]" />
-          {/* Active ring */}
-          <div className="absolute inset-0 rounded-full border-[10px] border-secondary-container border-t-transparent border-r-transparent rotate-45 drop-shadow-sm" />
-          <div className="text-center z-10">
-            <p className="font-display-lg text-display-lg text-on-surface leading-none tabular-nums">
+      <div className="flex-1 flex flex-col items-center gap-4">
+        {/* CSS ring gauge — percentage label sits below the ring to avoid clipping */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative w-40 h-40 flex items-center justify-center flex-shrink-0">
+            {/* Outer glow ring */}
+            <div className="absolute inset-0 rounded-full shadow-[0_0_24px_rgba(64,194,253,0.18),inset_0_2px_8px_rgba(17,28,45,0.06)]" />
+            {/* Track ring */}
+            <div className="absolute inset-0 rounded-full border-[10px] border-white/[0.08]" />
+            {/* Active ring */}
+            <div className="absolute inset-0 rounded-full border-[10px] border-secondary-container border-t-transparent border-r-transparent rotate-45 drop-shadow-sm" />
+            <p className="font-display-lg text-display-lg text-on-surface leading-none tabular-nums z-10">
               {percentage}%
             </p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant/80 mt-1.5">
-              {percentage}% of SKUs in healthy range
-            </p>
           </div>
+          <p className="font-label-sm text-label-sm text-on-surface-variant/80 text-center">
+            {percentage}% of SKUs in healthy range
+          </p>
         </div>
 
-        {/* Legend */}
-        <div className="mt-7 w-full space-y-2.5">
+        {/* Legend + progress bar */}
+        <div className="w-full space-y-2.5">
           <div className="flex justify-between items-center px-1">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-error/80" />
@@ -49,7 +49,6 @@ export default function SafeZoneVisual({
             </div>
           </div>
 
-          {/* Progress bar */}
           <div className="w-full bg-[#282828]/80 border border-white/[0.08] rounded-full h-2 overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-error via-secondary-container to-outline-variant/50"
@@ -64,7 +63,7 @@ export default function SafeZoneVisual({
           </div>
         </div>
 
-        <p className="font-body-sm text-body-sm text-on-surface-variant/60 text-center mt-4 leading-snug">
+        <p className="font-body-sm text-body-sm text-on-surface-variant/60 text-center leading-snug pb-1">
           Based on days of stock coverage across all active SKUs.
         </p>
       </div>
