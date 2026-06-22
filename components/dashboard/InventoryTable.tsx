@@ -62,7 +62,7 @@ export default function InventoryTable({
 }: InventoryTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
-  const [sortBy, setSortBy] = useState<SortOption>("oos-asc");
+  const [sortBy, setSortBy] = useState<SortOption>("sku-az");
 
   const processed = useMemo(() => {
     // 1. Marketplace filter (from parent prop)
@@ -174,10 +174,10 @@ export default function InventoryTable({
           </div>
 
           {/* Clear filters */}
-          {(search || statusFilter !== "All" || sortBy !== "oos-asc") && (
+          {(search || statusFilter !== "All" || sortBy !== "sku-az") && (
             <button
               type="button"
-              onClick={() => { setSearch(""); setStatusFilter("All"); setSortBy("oos-asc"); }}
+              onClick={() => { setSearch(""); setStatusFilter("All"); setSortBy("sku-az"); }}
               className="px-2.5 py-1.5 text-[12px] text-on-surface-variant/70 hover:text-on-surface border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.10] rounded-lg backdrop-blur-sm transition-all"
             >
               Clear
