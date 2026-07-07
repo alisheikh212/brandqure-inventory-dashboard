@@ -26,18 +26,21 @@ export default function Sidebar({
   const reorderHref = clientSlug ? `/dashboard/${clientSlug}/reorder` : "/admin";
   const reportHref = clientSlug ? `/dashboard/${clientSlug}/print` : "/admin";
   const inboundMapHref = clientSlug ? `/dashboard/${clientSlug}/inbound-map` : "/admin";
+  const historicForecastHref = clientSlug ? `/dashboard/${clientSlug}/historic-forecast` : "/admin";
 
   const isActive = (match: string) => {
     if (match === "admin") return pathname === "/admin";
     if (match === "reorder") return pathname.endsWith("/reorder");
     if (match === "print") return pathname.endsWith("/print");
     if (match === "inbound-map") return pathname.endsWith("/inbound-map");
+    if (match === "historic-forecast") return pathname.endsWith("/historic-forecast");
     if (match === "dashboard")
       return (
         pathname.startsWith("/dashboard") &&
         !pathname.endsWith("/reorder") &&
         !pathname.endsWith("/print") &&
-        !pathname.endsWith("/inbound-map")
+        !pathname.endsWith("/inbound-map") &&
+        !pathname.endsWith("/historic-forecast")
       );
     return false;
   };
@@ -66,6 +69,12 @@ export default function Sidebar({
       icon: "flight_takeoff",
       href: inboundMapHref,
       match: "inbound-map",
+    },
+    {
+      label: "Historic Forecast",
+      icon: "query_stats",
+      href: historicForecastHref,
+      match: "historic-forecast",
     },
     ...(role === "admin"
       ? [{ label: "Clients", icon: "groups", href: "/admin", match: "admin" }]
