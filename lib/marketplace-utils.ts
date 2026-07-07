@@ -137,26 +137,33 @@ export function getInventoryValue(id: string): string | null {
 
 /**
  * Filter inventory rows to those matching the given marketplace ID.
- * Returns an empty array if the ID is unrecognised.
+ *
+ * Both the row's marketplace field and the supplied ID are normalized before
+ * comparison, so "amazon.co.uk", "Amazon UK", and "Amazon.co.uk" all match
+ * each other regardless of which form the Google Sheet or Supabase stores.
+ * Unknown values are compared as-is (never defaulted to amazon.com).
  */
 export function filterByMarketplaceId<T extends { marketplace: string }>(
   rows: T[],
   marketplaceId: string,
 ): T[] {
-  const invValue = getInventoryValue(marketplaceId);
-  if (!invValue) return [];
-  return rows.filter((r) => r.marketplace === invValue);
+  const normalizedId = normalizeMarketplaceId(marketplaceId);
+  if (!normalizedId) return [];
+  return rows.filter(
+    (r) => normalizeMarketplaceId(r.marketplace) === normalizedId,
+  );
 }
 
 /**
  * Return true if the inventory row's marketplace matches the given ID.
+ * Normalizes both sides so raw canonical IDs and display strings compare equal.
  */
 export function rowMatchesMarketplace<T extends { marketplace: string }>(
   row: T,
   marketplaceId: string,
 ): boolean {
-  const invValue = getInventoryValue(marketplaceId);
-  return invValue !== null && row.marketplace === invValue;
+  const normalizedId = normalizeMarketplaceId(marketplaceId);
+  return Boolean(normalizedId) && normalizeMarketplaceId(row.marketplace) === normalizedId;
 }
 
 /**

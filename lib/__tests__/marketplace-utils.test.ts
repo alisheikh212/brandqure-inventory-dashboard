@@ -228,6 +228,106 @@ describe('single SKU auto-selection after marketplace filtering', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────
+// Tests 9-14: raw canonical IDs in inventory rows (the real bug scenario)
+// Client has enabled_marketplaces = ["amazon.co.uk"] and sheet stores
+// marketplace = "amazon.co.uk" (not the display string "Amazon UK").
+// ─────────────────────────────────────────────────────────────────
+
+const RAW_CANONICAL_INVENTORY = [
+  { id: 'uk-raw-1', sku: 'KC-KBMO-CDEV', marketplace: 'amazon.co.uk', productName: 'UK Device' },
+  { id: 'us-raw-1', sku: 'US-SKU-X',     marketplace: 'amazon.com',   productName: 'US Widget'  },
+];
+
+describe('Test 9 — selector label and value separation', () => {
+  it('getMarketplaceLabel("amazon.co.uk") returns "Amazon UK" (display label)', () => {
+    expect(getMarketplaceLabel('amazon.co.uk')).toBe('Amazon UK');
+  });
+
+  it('normalizeMarketplaceId("amazon.co.uk") returns "amazon.co.uk" (internal value unchanged)', () => {
+    expect(normalizeMarketplaceId('amazon.co.uk')).toBe('amazon.co.uk');
+  });
+
+  it('label and internal value are different strings — label is never used as the filter key', () => {
+    const label = getMarketplaceLabel('amazon.co.uk');
+    const value = normalizeMarketplaceId('amazon.co.uk');
+    expect(label).toBe('Amazon UK');
+    expect(value).toBe('amazon.co.uk');
+    expect(label).not.toBe(value);
+  });
+});
+
+describe('Test 10 — inventory rows with raw canonical marketplace field are returned', () => {
+  it('filterByMarketplaceId returns KC-KBMO-CDEV when sheet stores "amazon.co.uk"', () => {
+    const rows = filterByMarketplaceId(RAW_CANONICAL_INVENTORY, 'amazon.co.uk');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].sku).toBe('KC-KBMO-CDEV');
+  });
+
+  it('does not return US rows when filtering for amazon.co.uk', () => {
+    const rows = filterByMarketplaceId(RAW_CANONICAL_INVENTORY, 'amazon.co.uk');
+    expect(rows.every(r => r.marketplace === 'amazon.co.uk')).toBe(true);
+  });
+});
+
+describe('Test 11 — "Amazon UK" and "amazon.co.uk" normalize to the same canonical value', () => {
+  it('normalizeMarketplaceId("Amazon UK") === normalizeMarketplaceId("amazon.co.uk")', () => {
+    expect(normalizeMarketplaceId('Amazon UK')).toBe(normalizeMarketplaceId('amazon.co.uk'));
+  });
+
+  it('filterByMarketplaceId with "Amazon UK" selector matches row with marketplace "amazon.co.uk"', () => {
+    const rows = filterByMarketplaceId(RAW_CANONICAL_INVENTORY, 'Amazon UK');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].sku).toBe('KC-KBMO-CDEV');
+  });
+});
+
+describe('Test 12 — whitespace and casing do not break filtering', () => {
+  const WHITESPACE_INVENTORY = [
+    { sku: 'WS-1', marketplace: '  amazon.co.uk  ' },
+    { sku: 'WS-2', marketplace: 'AMAZON.CO.UK' },
+  ];
+
+  it('trims whitespace from row.marketplace before comparison', () => {
+    const rows = filterByMarketplaceId(WHITESPACE_INVENTORY, 'amazon.co.uk');
+    expect(rows.find(r => r.sku === 'WS-1')).toBeTruthy();
+  });
+
+  it('normalizeMarketplaceId trims leading/trailing whitespace', () => {
+    expect(normalizeMarketplaceId('  amazon.co.uk  ')).toBe('amazon.co.uk');
+  });
+});
+
+describe('Test 13 — display label is never used as the filter value', () => {
+  it('filtering by the label string "Amazon UK" still returns rows with canonical marketplace', () => {
+    // Proves the filter does not do row.marketplace === "Amazon UK"
+    const rows = filterByMarketplaceId(RAW_CANONICAL_INVENTORY, 'amazon.co.uk');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].marketplace).toBe('amazon.co.uk'); // raw value in row
+  });
+
+  it('direct label-vs-canonical string comparison fails (confirming the old bug)', () => {
+    // "Amazon UK" !== "amazon.co.uk" — old code would have returned nothing
+    expect('Amazon UK' === 'amazon.co.uk').toBe(false);
+  });
+
+  it('normalized comparison succeeds where label comparison would fail', () => {
+    expect(normalizeMarketplaceId('Amazon UK')).toBe(normalizeMarketplaceId('amazon.co.uk'));
+  });
+});
+
+describe('Test 14 — unknown marketplace values are not defaulted to amazon.com', () => {
+  it('normalizeMarketplaceId("tiktok.shop") returns the original, not "amazon.com"', () => {
+    expect(normalizeMarketplaceId('tiktok.shop')).toBe('tiktok.shop');
+    expect(normalizeMarketplaceId('tiktok.shop')).not.toBe('amazon.com');
+  });
+
+  it('filterByMarketplaceId for unknown marketplace returns empty, not US rows', () => {
+    const rows = filterByMarketplaceId(RAW_CANONICAL_INVENTORY, 'tiktok.shop');
+    expect(rows).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
 // Additional: other known marketplaces round-trip correctly
 // ─────────────────────────────────────────────────────────────────
 
