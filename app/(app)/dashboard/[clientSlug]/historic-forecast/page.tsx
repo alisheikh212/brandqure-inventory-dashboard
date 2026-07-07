@@ -67,6 +67,7 @@ export default async function HistoricForecastPage({ params }: PageProps) {
         clientSlug={clientSlug}
         clientName={clientConfig.clientName}
         defaultLeadTimeDays={clientConfig.defaultLeadTimeDays}
+        enabledMarketplaces={clientConfig.enabledMarketplaces}
       />
     </main>
   );

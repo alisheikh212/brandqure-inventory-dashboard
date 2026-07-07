@@ -10,6 +10,12 @@ import {
   type ParsedPeriod,
   type ForecastResult,
 } from "@/lib/historic-forecast";
+import {
+  normalizeEnabledMarketplaces,
+  getMarketplaceLabel,
+  filterByMarketplaceId,
+  rowMatchesMarketplace,
+} from "@/lib/marketplace-utils";
 
 // ─────────────────────────────────────────────────────────────────
 // Props
@@ -20,6 +26,7 @@ interface Props {
   clientSlug: string;
   clientName: string;
   defaultLeadTimeDays: number;
+  enabledMarketplaces: string[]; // raw Supabase values, e.g. ["amazon.co.uk"]
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -141,35 +148,33 @@ function PeriodChart({
 function ResultDisplay({
   result,
   row,
+  marketplaceLabel,
   selectedPeriods,
   leadTimeDays,
   cushionPct,
   deductFba,
   deductThreePl,
   deductInbound,
-  inboundEligible,
   horizonDate,
 }: {
   result: ForecastResult;
   row: InventoryRow;
+  marketplaceLabel: string;
   selectedPeriods: ParsedPeriod[];
   leadTimeDays: number;
   cushionPct: number;
   deductFba: boolean;
   deductThreePl: boolean;
   deductInbound: boolean;
-  inboundEligible: boolean;
   horizonDate: Date;
 }) {
   const selectedUnits = selectedPeriods.reduce((s, p) => s + p.units, 0);
   const selectedDays = selectedPeriods.reduce((s, p) => s + p.days, 0);
 
-  const oldestPeriod = [...selectedPeriods].sort((a, b) => a.sortKey - b.sortKey)[0];
-  const newestPeriod = [...selectedPeriods].sort((a, b) => b.sortKey - a.sortKey)[0];
+  const oldest = [...selectedPeriods].sort((a, b) => a.sortKey - b.sortKey)[0];
+  const newest = [...selectedPeriods].sort((a, b) => b.sortKey - a.sortKey)[0];
   const periodRange =
-    oldestPeriod && newestPeriod
-      ? `${oldestPeriod.label} – ${newestPeriod.label}`
-      : "—";
+    oldest && newest ? `${oldest.label} – ${newest.label}` : "—";
 
   const n = (v: number, dp = 0) =>
     v.toLocaleString("en-US", {
@@ -179,7 +184,7 @@ function ResultDisplay({
 
   const fbaDeducted = deductFba ? row.fbaAvailable : 0;
   const threePlDeducted = deductThreePl ? row.threePlInventory : 0;
-  const inboundDeducted = deductInbound && inboundEligible ? row.inboundUnits : 0;
+  const inboundDeducted = deductInbound ? row.inboundUnits : 0;
 
   return (
     <div className="space-y-6">
@@ -249,9 +254,7 @@ function ResultDisplay({
           <span className="tabular-nums text-secondary-container font-semibold">
             {result.recommendedOrderQuantity.toLocaleString()}
           </span>
-          <span className="text-on-surface-variant/70">
-            rounded up (ceil)
-          </span>
+          <span className="text-on-surface-variant/70">rounded up (ceil)</span>
         </div>
       </div>
 
@@ -264,7 +267,7 @@ function ResultDisplay({
           {[
             ["SKU", row.sku],
             ["Product", row.productName],
-            ["Marketplace", row.marketplace],
+            ["Marketplace", marketplaceLabel],
             ["Historical period", periodRange],
             ["Historical units", n(selectedUnits)],
             ["Historical days", n(selectedDays)],
@@ -280,7 +283,10 @@ function ResultDisplay({
             ["Total eligible inventory", n(result.eligibleInventory)],
             ["Recommended order quantity", n(result.recommendedOrderQuantity)],
           ].map(([label, value]) => (
-            <div key={label} className="flex justify-between border-b border-white/[0.05] pb-2">
+            <div
+              key={label}
+              className="flex justify-between border-b border-white/[0.05] pb-2"
+            >
               <dt className="font-label-sm text-label-sm text-on-surface-variant">
                 {label}
               </dt>
@@ -304,36 +310,92 @@ export default function HistoricForecastClient({
   clientSlug,
   clientName,
   defaultLeadTimeDays,
+  enabledMarketplaces,
 }: Props) {
-  // ── Step 1: SKU selection ──────────────────────────────────────
+  // ── Marketplace list (normalised, deduped) ────────────────────
+  const marketplaceIds = useMemo(
+    () => normalizeEnabledMarketplaces(enabledMarketplaces),
+    [enabledMarketplaces],
+  );
+
+  // Auto-select when only one marketplace is configured
+  const autoMarketplaceId =
+    marketplaceIds.length === 1 ? marketplaceIds[0] : null;
+
+  // ── Step 1a: Marketplace selection ───────────────────────────
+  // userMarketplaceId holds an explicit user choice; null = not yet chosen.
+  // Effective marketplace = user choice ?? auto-selected single
+  const [userMarketplaceId, setUserMarketplaceId] = useState<string | null>(null);
+  const selectedMarketplaceId = userMarketplaceId ?? autoMarketplaceId;
+
+  // Inventory filtered to selected marketplace
+  const marketplaceRows = useMemo(() => {
+    if (!selectedMarketplaceId) return [] as InventoryRow[];
+    return filterByMarketplaceId(inventory, selectedMarketplaceId);
+  }, [inventory, selectedMarketplaceId]);
+
+  const marketplaceLabel = selectedMarketplaceId
+    ? getMarketplaceLabel(selectedMarketplaceId)
+    : "";
+
+  function handleMarketplaceChange(newId: string) {
+    setUserMarketplaceId(newId);
+    // Clear SKU if it belongs to a different marketplace
+    if (selectedSkuId) {
+      const currentRow = inventory.find((r) => r.id === selectedSkuId);
+      if (currentRow && !rowMatchesMarketplace(currentRow, newId)) {
+        setSelectedSkuId(null);
+        setSkuSearch("");
+        setLeadTimeDays(defaultLeadTimeDays);
+      }
+    }
+    // Reset calculation
+    resetCalculation();
+  }
+
+  // ── Step 1b: SKU selection ────────────────────────────────────
   const [skuSearch, setSkuSearch] = useState("");
   const [skuDropdownOpen, setSkuDropdownOpen] = useState(false);
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedRow = useMemo(
-    () => inventory.find((r) => r.id === selectedSkuId) ?? null,
-    [inventory, selectedSkuId],
-  );
+  // Auto-select when only one SKU in the filtered list and user hasn't chosen yet
+  const autoSkuId =
+    selectedSkuId === null && marketplaceRows.length === 1
+      ? marketplaceRows[0].id
+      : null;
+  const effectiveSkuId = selectedSkuId ?? autoSkuId;
+  const selectedRow = inventory.find((r) => r.id === effectiveSkuId) ?? null;
 
   const filteredSkus = useMemo(() => {
     const q = skuSearch.toLowerCase().trim();
-    if (!q) return inventory.slice(0, 40);
-    return inventory
-      .filter(
-        (r) =>
-          r.sku.toLowerCase().includes(q) ||
-          r.productName.toLowerCase().includes(q),
-      )
-      .slice(0, 40);
-  }, [inventory, skuSearch]);
+    const base = q
+      ? marketplaceRows.filter(
+          (r) =>
+            r.sku.toLowerCase().includes(q) ||
+            r.productName.toLowerCase().includes(q),
+        )
+      : marketplaceRows;
+    return base.slice(0, 40);
+  }, [marketplaceRows, skuSearch]);
 
   function selectSku(row: InventoryRow) {
     setSelectedSkuId(row.id);
     setSkuSearch(row.sku);
     setSkuDropdownOpen(false);
-    // Pre-fill lead time from this SKU
     setLeadTimeDays(row.leadTimeDays > 0 ? row.leadTimeDays : defaultLeadTimeDays);
+  }
+
+  // Display value for the SKU input when closed (shows selected/auto-selected SKU)
+  const skuInputDisplay =
+    !skuDropdownOpen && selectedRow ? selectedRow.sku : skuSearch;
+
+  // ── Shared reset helper ───────────────────────────────────────
+  function resetCalculation() {
+    setPeriods([]);
+    setFileName(null);
+    setCsvError(null);
+    setSelectedLabels(new Set());
   }
 
   // ── Step 2: CSV upload ────────────────────────────────────────
@@ -343,7 +405,7 @@ export default function HistoricForecastClient({
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Declared here so processFile below can reference it without lint errors
+  // Declared before processFile to avoid lint "used before declared" error
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
 
   function processFile(file: File) {
@@ -383,7 +445,6 @@ export default function HistoricForecastClient({
   }
 
   // ── Step 3: Period selection ──────────────────────────────────
-
   function togglePeriod(label: string) {
     setSelectedLabels((prev) => {
       const next = new Set(prev);
@@ -433,15 +494,11 @@ export default function HistoricForecastClient({
     return d;
   }, [today, leadTimeDays, leadTimeValid]);
 
-  // The sheet has no inbound ETA column; eligibility is user-controlled via checkbox.
-  // inboundEligible is always true — the note in Step 5 explains this to the user.
-  const inboundEligible = true;
   const showNoEtaWarning = selectedRow !== null && selectedRow.inboundUnits > 0;
 
   const fbaDeducted = deductFba ? (selectedRow?.fbaAvailable ?? 0) : 0;
   const threePlDeducted = deductThreePl ? (selectedRow?.threePlInventory ?? 0) : 0;
-  const inboundDeducted =
-    deductInbound && inboundEligible ? (selectedRow?.inboundUnits ?? 0) : 0;
+  const inboundDeducted = deductInbound ? (selectedRow?.inboundUnits ?? 0) : 0;
 
   // ── Result computation ────────────────────────────────────────
   const canCompute =
@@ -451,43 +508,31 @@ export default function HistoricForecastClient({
     leadTimeValid &&
     cushionValid;
 
-  const result = useMemo<ForecastResult | null>(() => {
-    if (!canCompute) return null;
-    return computeForecast({
-      selectedUnits,
-      selectedDays,
-      leadTimeDays,
-      cushionPct,
-      fbaDeducted,
-      threePlDeducted,
-      inboundDeducted,
-    });
-  }, [
-    canCompute,
-    selectedUnits,
-    selectedDays,
-    leadTimeDays,
-    cushionPct,
-    fbaDeducted,
-    threePlDeducted,
-    inboundDeducted,
-  ]);
+  const result: ForecastResult | null = canCompute
+    ? computeForecast({
+        selectedUnits,
+        selectedDays,
+        leadTimeDays,
+        cushionPct,
+        fbaDeducted,
+        threePlDeducted,
+        inboundDeducted,
+      })
+    : null;
 
   // ── CSV Export ────────────────────────────────────────────────
   function handleExport() {
     if (!result || !selectedRow) return;
-    const oldestPeriod = [...selectedPeriods].sort((a, b) => a.sortKey - b.sortKey)[0];
-    const newestPeriod = [...selectedPeriods].sort((a, b) => b.sortKey - a.sortKey)[0];
+    const oldest = [...selectedPeriods].sort((a, b) => a.sortKey - b.sortKey)[0];
+    const newest = [...selectedPeriods].sort((a, b) => b.sortKey - a.sortKey)[0];
     const csv = buildExportCSV({
       client: clientName,
       sku: selectedRow.sku,
       productName: selectedRow.productName,
-      marketplace: selectedRow.marketplace,
+      marketplace: marketplaceLabel,
       calculationDate: new Date().toISOString().split("T")[0],
       selectedPeriods:
-        oldestPeriod && newestPeriod
-          ? `${oldestPeriod.label} – ${newestPeriod.label}`
-          : "",
+        oldest && newest ? `${oldest.label} – ${newest.label}` : "",
       historicalUnits: selectedUnits,
       historicalDays: selectedDays,
       avgDailySales: result.avgDailySales,
@@ -514,82 +559,196 @@ export default function HistoricForecastClient({
 
   return (
     <div className="space-y-4">
-      {/* ── Step 1: Select SKU ── */}
-      <Section step={1} title="Select SKU" icon="inventory_2">
-        {inventory.length === 0 ? (
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            No SKUs found. The Google Sheet may be empty or unavailable.
-          </p>
-        ) : (
-          <div className="relative max-w-xl">
-            <div
-              className="flex items-center gap-2 px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl focus-within:border-secondary-container/40 focus-within:ring-2 focus-within:ring-secondary-container/10 transition-all cursor-text"
-              onClick={() => { setSkuDropdownOpen(true); skuInputRef.current?.focus(); }}
-            >
-              <span className="material-symbols-outlined text-[18px] text-on-surface-variant flex-shrink-0">
-                search
-              </span>
-              <input
-                ref={skuInputRef}
-                type="text"
-                placeholder="Search SKU or product name…"
-                value={skuSearch}
-                onChange={(e) => {
-                  setSkuSearch(e.target.value);
-                  setSkuDropdownOpen(true);
-                  if (selectedSkuId) { setSelectedSkuId(null); }
-                }}
-                onFocus={() => setSkuDropdownOpen(true)}
-                onBlur={() => setTimeout(() => setSkuDropdownOpen(false), 150)}
-                className="flex-1 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none min-w-0"
-              />
-              {selectedSkuId && (
-                <span className="material-symbols-outlined text-[18px] text-secondary-container flex-shrink-0">
+      {/* ── Step 1: Select Marketplace & SKU ── */}
+      <Section step={1} title="Select Marketplace &amp; SKU" icon="inventory_2">
+
+        {/* No marketplaces configured */}
+        {marketplaceIds.length === 0 && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-error/10 border border-error/30">
+            <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">
+              error
+            </span>
+            <p className="font-body-sm text-body-sm text-error">
+              No enabled marketplaces are configured for this client. Contact
+              your administrator to update the client settings.
+            </p>
+          </div>
+        )}
+
+        {/* ── 1a: Marketplace selector ── */}
+        {marketplaceIds.length > 0 && (
+          <div className="mb-5">
+            <label className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5">
+              Marketplace
+            </label>
+
+            {marketplaceIds.length === 1 ? (
+              /* Single marketplace: auto-selected, display-only */
+              <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#1d1d1d]/40 border border-white/[0.07] rounded-xl max-w-xs">
+                <span className="material-symbols-outlined text-[16px] text-secondary-container">
                   check_circle
                 </span>
-              )}
-            </div>
-
-            {skuDropdownOpen && filteredSkus.length > 0 && (
-              <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl overflow-hidden max-h-[280px] overflow-y-auto">
-                {filteredSkus.map((row) => (
-                  <li key={row.id}>
-                    <button
-                      type="button"
-                      className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-white/[0.06] transition-colors"
-                      onMouseDown={() => selectSku(row)}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-label-md text-label-md text-on-surface truncate">
-                          {row.sku}
-                        </p>
-                        <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
-                          {row.productName}
-                        </p>
-                      </div>
-                      <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full font-label-sm text-[11px] text-on-surface-variant bg-white/[0.06] border border-white/[0.08]">
-                        {row.marketplace}
-                      </span>
-                    </button>
-                  </li>
+                <span className="font-label-md text-label-md text-on-surface">
+                  {getMarketplaceLabel(marketplaceIds[0])}
+                </span>
+                <span className="ml-auto font-label-sm text-label-sm text-on-surface-variant/50">
+                  Auto-selected
+                </span>
+              </div>
+            ) : (
+              /* Multiple marketplaces: require user selection */
+              <select
+                value={selectedMarketplaceId ?? ""}
+                onChange={(e) => handleMarketplaceChange(e.target.value)}
+                className="w-full max-w-xs px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl font-body-md text-body-md text-on-surface outline-none focus:border-secondary-container/40 focus:ring-2 focus:ring-secondary-container/10 transition-all appearance-none cursor-pointer"
+              >
+                <option value="" disabled>
+                  Select a marketplace…
+                </option>
+                {marketplaceIds.map((id) => (
+                  <option key={id} value={id}>
+                    {getMarketplaceLabel(id)}
+                  </option>
                 ))}
-              </ul>
+              </select>
             )}
           </div>
         )}
 
+        {/* ── 1b: SKU selector (only after marketplace resolved) ── */}
+        {selectedMarketplaceId && (
+          <>
+            <label className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5">
+              SKU
+            </label>
+
+            {marketplaceRows.length === 0 ? (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#1d1d1d]/60 border border-white/[0.07]">
+                <span className="material-symbols-outlined text-[18px] text-outline flex-shrink-0 mt-0.5">
+                  info
+                </span>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  No SKUs found for{" "}
+                  <strong className="text-on-surface">{marketplaceLabel}</strong>
+                  . Check that the Google Sheet contains rows with this
+                  marketplace.
+                </p>
+              </div>
+            ) : autoSkuId ? (
+              /* Single SKU: auto-selected */
+              <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#1d1d1d]/40 border border-white/[0.07] rounded-xl max-w-xl">
+                <span className="material-symbols-outlined text-[16px] text-secondary-container">
+                  check_circle
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-label-md text-label-md text-on-surface truncate">
+                    {marketplaceRows[0].sku}
+                  </p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
+                    {marketplaceRows[0].productName}
+                  </p>
+                </div>
+                <span className="ml-auto font-label-sm text-label-sm text-on-surface-variant/50 flex-shrink-0">
+                  Auto-selected
+                </span>
+              </div>
+            ) : (
+              /* Multiple SKUs: searchable dropdown */
+              <div className="relative max-w-xl">
+                <div
+                  className="flex items-center gap-2 px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl focus-within:border-secondary-container/40 focus-within:ring-2 focus-within:ring-secondary-container/10 transition-all cursor-text"
+                  onClick={() => {
+                    setSkuDropdownOpen(true);
+                    skuInputRef.current?.focus();
+                  }}
+                >
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant flex-shrink-0">
+                    search
+                  </span>
+                  <input
+                    ref={skuInputRef}
+                    type="text"
+                    placeholder="Search SKU or product name…"
+                    value={skuInputDisplay}
+                    onChange={(e) => {
+                      setSkuSearch(e.target.value);
+                      setSkuDropdownOpen(true);
+                      if (selectedSkuId) setSelectedSkuId(null);
+                    }}
+                    onFocus={() => {
+                      setSkuSearch("");
+                      setSkuDropdownOpen(true);
+                    }}
+                    onBlur={() =>
+                      setTimeout(() => setSkuDropdownOpen(false), 150)
+                    }
+                    className="flex-1 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none min-w-0"
+                  />
+                  {effectiveSkuId && (
+                    <span className="material-symbols-outlined text-[18px] text-secondary-container flex-shrink-0">
+                      check_circle
+                    </span>
+                  )}
+                </div>
+
+                {skuDropdownOpen && filteredSkus.length > 0 && (
+                  <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl overflow-hidden max-h-[280px] overflow-y-auto">
+                    {filteredSkus.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-white/[0.06] transition-colors"
+                          onMouseDown={() => selectSku(row)}
+                        >
+                          <div className="min-w-0">
+                            <p className="font-label-md text-label-md text-on-surface truncate">
+                              {row.sku}
+                            </p>
+                            <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
+                              {row.productName}
+                            </p>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {skuDropdownOpen &&
+                  filteredSkus.length === 0 &&
+                  skuSearch.trim() !== "" && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl p-4">
+                      <p className="font-body-sm text-body-sm text-on-surface-variant">
+                        No SKUs match &ldquo;{skuSearch}&rdquo; in{" "}
+                        {marketplaceLabel}.
+                      </p>
+                    </div>
+                  )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Selected SKU info cards */}
         {selectedRow && (
-          <div className="mt-4 flex flex-wrap gap-4">
+          <div className="mt-4 flex flex-wrap gap-3">
             {[
               ["FBA Available", selectedRow.fbaAvailable.toLocaleString()],
               ["3PL Stock", selectedRow.threePlInventory.toLocaleString()],
               ["Inbound Units", selectedRow.inboundUnits.toLocaleString()],
               ["Lead Time", `${selectedRow.leadTimeDays}d`],
-              ["Marketplace", selectedRow.marketplace],
+              ["Marketplace", marketplaceLabel],
             ].map(([label, value]) => (
-              <div key={label} className="bg-[#1d1d1d]/60 border border-white/[0.07] rounded-lg px-3 py-2">
-                <p className="font-label-sm text-label-sm text-on-surface-variant">{label}</p>
-                <p className="font-label-md text-label-md text-on-surface tabular-nums">{value}</p>
+              <div
+                key={label}
+                className="bg-[#1d1d1d]/60 border border-white/[0.07] rounded-lg px-3 py-2"
+              >
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  {label}
+                </p>
+                <p className="font-label-md text-label-md text-on-surface tabular-nums">
+                  {value}
+                </p>
               </div>
             ))}
           </div>
@@ -597,9 +756,17 @@ export default function HistoricForecastClient({
       </Section>
 
       {/* ── Step 2: Upload CSV ── */}
-      <Section step={2} title="Upload Sellerboard CSV" icon="upload_file" locked={!selectedRow}>
+      <Section
+        step={2}
+        title="Upload Sellerboard CSV"
+        icon="upload_file"
+        locked={!selectedRow}
+      >
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
@@ -618,8 +785,8 @@ export default function HistoricForecastClient({
                 {fileName}
               </p>
               <p className="font-label-sm text-label-sm text-on-surface-variant">
-                {periods.length} period{periods.length !== 1 ? "s" : ""} detected
-                · Click or drag to replace
+                {periods.length} period{periods.length !== 1 ? "s" : ""}{" "}
+                detected · Click or drag to replace
               </p>
             </>
           ) : (
@@ -680,7 +847,8 @@ export default function HistoricForecastClient({
                 </span>
                 <p className="font-body-sm text-body-sm text-[#fbbf24]/90">
                   Forecast reliability may be limited because fewer than 90 days
-                  of historical sales are included ({selectedDays} days selected).
+                  of historical sales are included ({selectedDays} days
+                  selected).
                 </p>
               </div>
             )}
@@ -795,7 +963,9 @@ export default function HistoricForecastClient({
               min={1}
               max={365}
               value={leadTimeDays}
-              onChange={(e) => setLeadTimeDays(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) =>
+                setLeadTimeDays(parseInt(e.target.value, 10) || 0)
+              }
               className={`w-full px-3 py-2.5 bg-[#1d1d1d]/80 border rounded-xl font-body-md text-body-md text-on-surface outline-none focus:ring-2 transition-all ${
                 leadTimeValid
                   ? "border-white/[0.09] focus:border-secondary-container/40 focus:ring-secondary-container/10"
@@ -807,12 +977,19 @@ export default function HistoricForecastClient({
                 Must be between 1 and 365.
               </p>
             )}
-            {leadTimeDays !== (selectedRow?.leadTimeDays ?? defaultLeadTimeDays) && (
-              <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-1">
-                SKU default:{" "}
-                {selectedRow?.leadTimeDays ?? defaultLeadTimeDays}d
-              </p>
-            )}
+            {selectedRow &&
+              leadTimeDays !==
+                (selectedRow.leadTimeDays > 0
+                  ? selectedRow.leadTimeDays
+                  : defaultLeadTimeDays) && (
+                <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-1">
+                  SKU default:{" "}
+                  {selectedRow.leadTimeDays > 0
+                    ? selectedRow.leadTimeDays
+                    : defaultLeadTimeDays}
+                  d
+                </p>
+              )}
           </div>
 
           <div>
@@ -824,7 +1001,9 @@ export default function HistoricForecastClient({
               min={0}
               max={200}
               value={cushionPct}
-              onChange={(e) => setCushionPct(parseFloat(e.target.value) || 0)}
+              onChange={(e) =>
+                setCushionPct(parseFloat(e.target.value) || 0)
+              }
               className={`w-full px-3 py-2.5 bg-[#1d1d1d]/80 border rounded-xl font-body-md text-body-md text-on-surface outline-none focus:ring-2 transition-all ${
                 cushionValid
                   ? "border-white/[0.09] focus:border-secondary-container/40 focus:ring-secondary-container/10"
@@ -945,19 +1124,19 @@ export default function HistoricForecastClient({
           <ResultDisplay
             result={result}
             row={selectedRow}
+            marketplaceLabel={marketplaceLabel}
             selectedPeriods={selectedPeriods}
             leadTimeDays={leadTimeDays}
             cushionPct={cushionPct}
             deductFba={deductFba}
             deductThreePl={deductThreePl}
             deductInbound={deductInbound}
-            inboundEligible={inboundEligible}
             horizonDate={horizonDate}
           />
         </div>
       )}
 
-      {/* ── Not ready callout (when all steps filled but validation missing) ── */}
+      {/* Not ready callout */}
       {!canCompute && selectedRow && periods.length > 0 && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-white/[0.07] bg-[#1d1d1d]/40">
           <span className="material-symbols-outlined text-[20px] text-outline">
