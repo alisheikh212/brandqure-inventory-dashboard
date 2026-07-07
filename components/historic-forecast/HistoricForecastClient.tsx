@@ -16,6 +16,8 @@ import {
   filterByMarketplaceId,
   rowMatchesMarketplace,
 } from "@/lib/marketplace-utils";
+import BatchDispatchPlanner from "@/components/batch-dispatch/BatchDispatchPlanner";
+import { buildBatchExportCSV, type BatchDispatchResult, type BatchDispatchInputs } from "@/lib/batch-dispatch";
 
 // ─────────────────────────────────────────────────────────────────
 // Props
@@ -507,6 +509,23 @@ export default function HistoricForecastClient({
       })
     : null;
 
+  // ── Batch plan state (populated by BatchDispatchPlanner via callback) ─
+  const [batchPlan, setBatchPlan] = useState<{
+    result: BatchDispatchResult;
+    inputs: BatchDispatchInputs;
+  } | null>(null);
+
+  function handleBatchPlanChange(
+    result: BatchDispatchResult | null,
+    inputs: BatchDispatchInputs | null,
+  ) {
+    if (result && inputs) {
+      setBatchPlan({ result, inputs });
+    } else {
+      setBatchPlan(null);
+    }
+  }
+
   // ── CSV export ────────────────────────────────────────────────
   function handleExport() {
     if (!result || !selectedRow) return;
@@ -531,7 +550,10 @@ export default function HistoricForecastClient({
       inboundDeducted,
       recommendedOrderQuantity: result.recommendedOrderQuantity,
     });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const batchSuffix = batchPlan
+      ? buildBatchExportCSV(batchPlan.result, batchPlan.inputs)
+      : "";
+    const blob = new Blob([csv + batchSuffix], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1106,6 +1128,28 @@ export default function HistoricForecastClient({
             horizonDate={horizonDate}
           />
         </div>
+      )}
+
+      {/* ── Step 6: Batch Dispatch Planner ── */}
+      {result && selectedRow && (
+        <Section step={6} title="Batch Dispatch Planner" icon="local_shipping">
+          <p className="font-body-sm text-body-sm text-on-surface-variant mb-5">
+            Split the recommended order quantity of{" "}
+            <span className="text-on-surface font-semibold tabular-nums">
+              {result.recommendedOrderQuantity.toLocaleString()} units
+            </span>{" "}
+            into staged shipments. Adjust the inputs below to plan your
+            dispatch schedule.
+          </p>
+          <BatchDispatchPlanner
+            totalOrderQuantity={result.recommendedOrderQuantity}
+            avgDailySales={result.avgDailySales}
+            eligibleInventory={result.eligibleInventory}
+            leadTimeDays={leadTimeDays}
+            sku={selectedRow.sku}
+            onPlanChange={handleBatchPlanChange}
+          />
+        </Section>
       )}
 
       {/* Pending callout — show when SKU is chosen but not ready to compute */}

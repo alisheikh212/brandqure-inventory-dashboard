@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import type { InventoryRow, MarketplaceFilter } from "@/lib/mock-data";
 import { MARKETPLACES } from "@/lib/mock-data";
 import type { InboundOrder } from "@/lib/types";
@@ -11,6 +11,7 @@ import {
   buildActiveInboundMap,
   type ReorderStatus,
 } from "@/lib/reorder";
+import BatchDispatchPlanner from "@/components/batch-dispatch/BatchDispatchPlanner";
 
 interface ReorderTableProps {
   rows: InventoryRow[];
@@ -137,6 +138,7 @@ function AlertTile({
 export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps) {
   const [activeMarketplace, setActiveMarketplace] =
     useState<MarketplaceFilter>("All");
+  const [expandedBatchSkuId, setExpandedBatchSkuId] = useState<string | null>(null);
 
   // Build SKU → active app inbound units map once per render.
   // Only orders within 10 days past their expected arrival date are included.
@@ -268,10 +270,13 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                   const recQty = recommendedReorderQty(row, appActiveUnits);
                   const rowBg =
                     status === "Reorder Now" ? "bg-error/[0.06]" : "";
+                  const batchExpanded = expandedBatchSkuId === row.id;
+                  const eligibleInventory =
+                    row.fbaAvailable + row.reservedUnits + row.inboundUnits + appActiveUnits;
 
                   return (
+                    <Fragment key={row.id}>
                     <tr
-                      key={row.id}
                       className={`transition-colors hover:bg-white/[0.03] ${rowBg}`}
                     >
                       {/* SKU / Product */}
@@ -383,6 +388,28 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                               ].filter(Boolean).join(" ")
                             : "covers next 60 days after lead time"}
                         </p>
+                        {recQty > 0 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedBatchSkuId(
+                                batchExpanded ? null : row.id,
+                              )
+                            }
+                            className={`mt-2 flex items-center gap-1 text-[11px] font-medium transition-colors ${
+                              batchExpanded
+                                ? "text-secondary-container"
+                                : "text-outline hover:text-on-surface-variant"
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {batchExpanded
+                                ? "keyboard_arrow_up"
+                                : "local_shipping"}
+                            </span>
+                            {batchExpanded ? "Close plan" : "Plan dispatch"}
+                          </button>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -390,6 +417,35 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                         <StatusPill status={status} />
                       </td>
                     </tr>
+
+                    {/* Expandable batch planner */}
+                    {batchExpanded && recQty > 0 && (
+                      <tr
+                        className="bg-[#0f1a20]/60 border-t border-secondary-container/10"
+                      >
+                        <td colSpan={8} className="px-6 py-5">
+                          <div className="flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-[18px] text-secondary-container">
+                              local_shipping
+                            </span>
+                            <p className="font-label-md text-label-md text-secondary-container">
+                              Batch Dispatch Planner — {row.sku}
+                            </p>
+                            <span className="font-label-sm text-label-sm text-outline">
+                              ({recQty.toLocaleString()} units · {row.avgDailySales.toFixed(2)} avg daily sales)
+                            </span>
+                          </div>
+                          <BatchDispatchPlanner
+                            totalOrderQuantity={recQty}
+                            avgDailySales={row.avgDailySales}
+                            eligibleInventory={eligibleInventory}
+                            leadTimeDays={row.leadTimeDays}
+                            sku={row.sku}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })
               )}

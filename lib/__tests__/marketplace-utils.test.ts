@@ -519,6 +519,62 @@ describe('Test 24 — unknown marketplaces do not default to Amazon US', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────
+// Regression: Google Sheet stores "Amazon.co.uk" (capital A) while
+// Supabase enabled_marketplaces stores "amazon.co.uk" (all lowercase).
+// These must match after normalization on both sides.
+// ─────────────────────────────────────────────────────────────────
+
+const SHEET_CASING_INVENTORY = [
+  { id: 'uk-sheet-1', sku: 'KC-KBMO-CDEV', marketplace: 'Amazon.co.uk', productName: 'UK Device' },
+  { id: 'us-sheet-1', sku: 'US-WIDGET',    marketplace: 'Amazon.com',   productName: 'US Widget'  },
+];
+
+describe('Regression — "Amazon.co.uk" (sheet casing) matches "amazon.co.uk" (Supabase canonical)', () => {
+  it('normalizeMarketplaceId("Amazon.co.uk") returns "amazon.co.uk"', () => {
+    expect(normalizeMarketplaceId('Amazon.co.uk')).toBe('amazon.co.uk');
+  });
+
+  it('normalizeMarketplaceId("amazon.co.uk") returns "amazon.co.uk"', () => {
+    expect(normalizeMarketplaceId('amazon.co.uk')).toBe('amazon.co.uk');
+  });
+
+  it('"Amazon.co.uk" and "amazon.co.uk" normalize to the same canonical value', () => {
+    expect(normalizeMarketplaceId('Amazon.co.uk')).toBe(
+      normalizeMarketplaceId('amazon.co.uk'),
+    );
+  });
+
+  it('filterByMarketplaceId returns KC-KBMO-CDEV when sheet stores "Amazon.co.uk" and selected is "amazon.co.uk"', () => {
+    const rows = filterByMarketplaceId(SHEET_CASING_INVENTORY, 'amazon.co.uk');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].sku).toBe('KC-KBMO-CDEV');
+  });
+
+  it('does not return US rows when filtering "amazon.co.uk" against sheet with "Amazon.co.uk" entries', () => {
+    const rows = filterByMarketplaceId(SHEET_CASING_INVENTORY, 'amazon.co.uk');
+    expect(rows.every((r) => r.sku !== 'US-WIDGET')).toBe(true);
+  });
+
+  it('rowMatchesMarketplace returns true when row.marketplace is "Amazon.co.uk" and id is "amazon.co.uk"', () => {
+    expect(
+      rowMatchesMarketplace(
+        { sku: 'KC-KBMO-CDEV', marketplace: 'Amazon.co.uk' },
+        'amazon.co.uk',
+      ),
+    ).toBe(true);
+  });
+
+  it('rowMatchesMarketplace returns false when row.marketplace is "Amazon.co.uk" and id is "amazon.com"', () => {
+    expect(
+      rowMatchesMarketplace(
+        { sku: 'KC-KBMO-CDEV', marketplace: 'Amazon.co.uk' },
+        'amazon.com',
+      ),
+    ).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
 // Tests 25-26: new marketplace entries (extended catalog)
 // ─────────────────────────────────────────────────────────────────
 
