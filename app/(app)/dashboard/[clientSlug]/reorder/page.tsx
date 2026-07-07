@@ -108,7 +108,11 @@ export default async function ReorderPage({ params }: PageProps) {
       </div>
 
       {/* Reorder Table */}
-      <ReorderTable rows={sorted} inboundOrders={inboundOrders} />
+      <ReorderTable
+        rows={sorted}
+        inboundOrders={inboundOrders}
+        enabledMarketplaces={clientConfig.enabledMarketplaces}
+      />
 
       {/* Footer note */}
       <div className="mt-8 p-4 bg-surface-container rounded-lg border border-outline-variant">

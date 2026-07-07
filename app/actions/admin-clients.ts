@@ -2,11 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createClientConfig, updateClientConfig } from '@/lib/clients'
+import { getAllMarketplaces } from '@/lib/marketplace-utils'
 import { redirect } from 'next/navigation'
 
 const SLUG_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
 const VALID_TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const VALID_MARKETPLACES = ['Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart'] as const
+// Full canonical catalog (14 marketplaces) — never the narrow legacy 5-value list.
+// Checkbox field names are `marketplace_<canonical-id>`, e.g. `marketplace_amazon.co.uk`.
+const VALID_MARKETPLACES = getAllMarketplaces().map((m) => m.value)
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -54,7 +57,7 @@ export async function addClient(_prev: ActionResult | null, formData: FormData):
     return { success: false, error: 'Default lead time must be between 1 and 365 days.' }
   }
   if (enabledMarketplaces.length === 0) {
-    return { success: false, error: 'At least one marketplace must be selected.' }
+    return { success: false, error: 'Select at least one marketplace for this client.' }
   }
 
   try {

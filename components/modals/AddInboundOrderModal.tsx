@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Modal from '@/components/ui/Modal'
 import type { InventoryRow } from '@/lib/mock-data'
 import { createInboundOrders } from '@/app/actions/inbound-orders'
+import { getMarketplaceLabel } from '@/lib/marketplace-utils'
 
 interface Props {
   clientSlug: string
@@ -17,12 +18,11 @@ interface OrderRow {
   sku: string
   asin: string
   productName: string
+  /** Canonical marketplace ID inherited from the selected SKU — never independently editable or defaulted. */
   marketplace: string
   quantity: string
   estimatedDaysToFba: string
 }
-
-const MARKETPLACES = ['Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart'] as const
 
 let _nextKey = 1
 function nextKey() { return _nextKey++ }
@@ -33,7 +33,7 @@ function emptyRow(): OrderRow {
     sku: '',
     asin: '',
     productName: '',
-    marketplace: 'Amazon.com',
+    marketplace: '',
     quantity: '',
     estimatedDaysToFba: '',
   }
@@ -66,7 +66,9 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
           sku,
           asin: match?.asin ?? '',
           productName: match?.productName ?? '',
-          marketplace: match?.marketplace ?? 'Amazon USA',
+          // Inherited from the selected inventory row's canonical marketplace ID.
+          // Left blank (never defaulted) if no matching row is found.
+          marketplace: match?.marketplace ?? '',
         }
       })
     )
@@ -96,6 +98,7 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
       const r = rows[i]
       const label = `Row ${i + 1}`
       if (!r.sku) { setError(`${label}: Please select a SKU.`); return }
+      if (!r.marketplace) { setError(`${label}: Marketplace could not be determined for this SKU.`); return }
 
       const qty = parseInt(r.quantity, 10)
       if (r.quantity === '' || isNaN(qty) || qty < 1) {
@@ -212,21 +215,15 @@ export default function AddInboundOrderModal({ clientSlug, inventory, onClose }:
                 tabIndex={-1}
               />
 
-              {/* Marketplace */}
-              <div className="relative">
-                <select
-                  value={row.marketplace}
-                  onChange={(e) => handleFieldChange(row._key, 'marketplace', e.target.value)}
-                  className="brand-input appearance-none pr-7 text-[13px]"
-                >
-                  {MARKETPLACES.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline text-[16px] pointer-events-none">
-                  expand_more
-                </span>
-              </div>
+              {/* Marketplace — inherited from the selected SKU, never independently editable or defaulted */}
+              <input
+                type="text"
+                value={row.marketplace ? getMarketplaceLabel(row.marketplace) : ''}
+                readOnly
+                placeholder="Select a SKU first"
+                className="brand-input text-on-surface-variant/75 text-[13px] cursor-default"
+                tabIndex={-1}
+              />
 
               {/* Quantity */}
               <input

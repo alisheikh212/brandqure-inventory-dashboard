@@ -1,8 +1,8 @@
 // ============================================================
-// Marketplace utilities for the Historic Forecast feature.
+// Marketplace utilities — the single source of truth for marketplace
+// normalization across the app (Google Sheet parsing, Supabase
+// enabled_marketplaces, and every UI filter/display).
 //
-// This is SEPARATE from normalizeMarketplace() in lib/mock-data.ts.
-// That function maps input → Marketplace display string ("Amazon UK").
 // This module operates on canonical Supabase-style IDs ("amazon.co.uk")
 // and provides label + inventory-value lookups in both directions.
 // ============================================================
@@ -195,6 +195,20 @@ export function rowMatchesMarketplace<T extends { marketplace: string }>(
 ): boolean {
   const normalizedId = normalizeMarketplaceId(marketplaceId);
   return Boolean(normalizedId) && normalizeMarketplaceId(row.marketplace) === normalizedId;
+}
+
+export interface MarketplaceOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * Return the full canonical marketplace catalog as { value, label } pairs.
+ * Used by admin forms (enabled-marketplace checkboxes) where every supported
+ * marketplace must be selectable — never the narrow legacy 5-value list.
+ */
+export function getAllMarketplaces(): MarketplaceOption[] {
+  return CATALOG.map((e) => ({ value: e.id, label: e.label }));
 }
 
 /**

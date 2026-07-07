@@ -2,10 +2,11 @@
 
 import { useActionState } from 'react'
 import { addClient, type ActionResult } from '@/app/actions/admin-clients'
+import { getAllMarketplaces } from '@/lib/marketplace-utils'
 import Link from 'next/link'
 
 const TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const MARKETPLACES = ['Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart'] as const
+const MARKETPLACES = getAllMarketplaces()
 
 export default function AddClientForm() {
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(addClient, null)
@@ -118,14 +119,13 @@ export default function AddClientForm() {
         <p className="font-label-md text-label-md text-on-surface-variant">Enabled Marketplaces</p>
         <div className="flex flex-wrap gap-4">
           {MARKETPLACES.map((m) => (
-            <label key={m} className="flex items-center gap-2 cursor-pointer select-none">
+            <label key={m.value} className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
-                name={`marketplace_${m}`}
-                defaultChecked
+                name={`marketplace_${m.value}`}
                 className="w-4 h-4 accent-primary rounded"
               />
-              <span className="font-body-md text-body-md text-on-surface">{m}</span>
+              <span className="font-body-md text-body-md text-on-surface">{m.label}</span>
             </label>
           ))}
         </div>

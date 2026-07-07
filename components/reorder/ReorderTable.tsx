@@ -2,7 +2,6 @@
 
 import { useState, useMemo, Fragment } from "react";
 import type { InventoryRow, MarketplaceFilter } from "@/lib/mock-data";
-import { MARKETPLACES } from "@/lib/mock-data";
 import type { InboundOrder } from "@/lib/types";
 import {
   getReorderStatus,
@@ -12,10 +11,17 @@ import {
   type ReorderStatus,
 } from "@/lib/reorder";
 import BatchDispatchPlanner from "@/components/batch-dispatch/BatchDispatchPlanner";
+import {
+  normalizeEnabledMarketplaces,
+  getMarketplaceLabel,
+  rowMatchesMarketplace,
+} from "@/lib/marketplace-utils";
 
 interface ReorderTableProps {
   rows: InventoryRow[];
   inboundOrders: InboundOrder[];
+  /** Raw Supabase values, e.g. ["amazon.co.uk"] — this client's enabled marketplaces only. */
+  enabledMarketplaces: string[];
 }
 
 // ── Sub-components ────────────────────────────────────────────
@@ -135,10 +141,18 @@ function AlertTile({
 
 // ── Main component ────────────────────────────────────────────
 
-export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps) {
+export default function ReorderTable({ rows, inboundOrders, enabledMarketplaces }: ReorderTableProps) {
   const [activeMarketplace, setActiveMarketplace] =
     useState<MarketplaceFilter>("All");
   const [expandedBatchSkuId, setExpandedBatchSkuId] = useState<string | null>(null);
+
+  // Marketplace pill options — scoped to this client's enabled_marketplaces only,
+  // never a global list. Canonical IDs are used as state/comparison values;
+  // getMarketplaceLabel() is used only at render time for display text.
+  const marketplaceOptions = useMemo(
+    () => normalizeEnabledMarketplaces(enabledMarketplaces),
+    [enabledMarketplaces],
+  );
 
   // Build SKU → active app inbound units map once per render.
   // Only orders within 10 days past their expected arrival date are included.
@@ -147,10 +161,12 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
     [inboundOrders]
   );
 
+  // Normalized comparison — casing/whitespace variants in the sheet
+  // ("Amazon.co.uk" vs "amazon.co.uk") never cause a false miss.
   const filtered =
     activeMarketplace === "All"
       ? rows
-      : rows.filter((r) => r.marketplace === activeMarketplace);
+      : rows.filter((r) => rowMatchesMarketplace(r, activeMarketplace));
 
   const reorderNowCount = filtered.filter(
     (r) => getReorderStatus(r) === "Reorder Now"
@@ -206,9 +222,20 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
         />
       </div>
 
-      {/* Marketplace filter pills */}
+      {/* Marketplace filter pills — this client's enabled marketplaces only */}
       <div className="flex items-center gap-2 flex-wrap">
-        {MARKETPLACES.map((mp) => (
+        <button
+          type="button"
+          onClick={() => setActiveMarketplace("All")}
+          className={`px-4 py-1.5 rounded-full font-label-md text-label-md transition-all duration-150 ${
+            activeMarketplace === "All"
+              ? "bg-primary text-white border border-primary shadow-sm"
+              : "border border-white/[0.09] bg-surface-container-high text-on-surface hover:bg-surface-container-highest hover:border-white/[0.15]"
+          }`}
+        >
+          All
+        </button>
+        {marketplaceOptions.map((mp) => (
           <button
             key={mp}
             type="button"
@@ -219,7 +246,7 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                 : "border border-white/[0.09] bg-surface-container-high text-on-surface hover:bg-surface-container-highest hover:border-white/[0.15]"
             }`}
           >
-            {mp}
+            {getMarketplaceLabel(mp)}
           </button>
         ))}
       </div>
@@ -295,7 +322,7 @@ export default function ReorderTable({ rows, inboundOrders }: ReorderTableProps)
                       {/* Marketplace */}
                       <td className="px-6 py-5">
                         <span className="px-2.5 py-1 rounded-full bg-surface-container-low border border-outline-variant/50 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">
-                          {row.marketplace}
+                          {getMarketplaceLabel(row.marketplace)}
                         </span>
                       </td>
 

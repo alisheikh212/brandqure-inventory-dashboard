@@ -8,6 +8,7 @@ import type {
   MarketplaceFilter,
 } from "@/lib/mock-data";
 import type { SummaryStats } from "@/lib/mock-data";
+import { getMarketplaceLabel } from "@/lib/marketplace-utils";
 import SummaryCards from "./SummaryCards";
 import InventoryHealthVisual from "./InventoryHealthVisual";
 import SafeZoneVisual from "./SafeZoneVisual";
@@ -95,7 +96,7 @@ export default function DashboardContent({
                       : "border border-white/[0.09] bg-white/[0.05] text-on-surface-variant hover:bg-white/[0.11] hover:text-on-surface backdrop-blur-sm"
                   }`}
                 >
-                  {mp}
+                  {getMarketplaceLabel(mp)}
                 </button>
               ))}
             </div>

@@ -10,26 +10,16 @@
 
 export type StockStatus = "Optimal" | "Good" | "Review" | "Critical";
 export type Tier = "Enterprise" | "Pro" | "Basic";
-export type Marketplace = "Amazon.com" | "Amazon.ca" | "Amazon UK" | "Shopify" | "Walmart";
-export type MarketplaceFilter = "All" | Marketplace;
-
 /**
- * Normalize legacy and current marketplace label variants to the canonical form.
- * Handles both old display labels ("Amazon USA", "Amazon Canada") and current
- * Supabase/sheet values ("Amazon.com", "Amazon.ca").
- * Falls back to the raw string cast to Marketplace for unknown values.
+ * @deprecated Legacy 5-value display-string union. Only referenced by unused
+ * mock/deferred fixtures (PurchaseOrder). Do not use for InventoryRow.marketplace
+ * or Client.enabledMarketplaces — those are canonical marketplace IDs (plain
+ * string, e.g. "amazon.co.uk") normalized via lib/marketplace-utils.ts.
  */
-export function normalizeMarketplace(raw: string): Marketplace {
-  const MAP: Record<string, Marketplace> = {
-    "Amazon USA":    "Amazon.com",
-    "Amazon US":     "Amazon.com",
-    "Amazon.com":    "Amazon.com",
-    "Amazon Canada": "Amazon.ca",
-    "Amazon CA":     "Amazon.ca",
-    "Amazon.ca":     "Amazon.ca",
-  };
-  return MAP[raw] ?? (raw as Marketplace);
-}
+export type Marketplace = "Amazon.com" | "Amazon.ca" | "Amazon UK" | "Shopify" | "Walmart";
+/** "All" sentinel plus any canonical marketplace ID string (e.g. "amazon.co.uk"). */
+export type MarketplaceFilter = "All" | string;
+
 export type InventoryStatus =
   | "Healthy"
   | "Low Stock"
@@ -59,7 +49,8 @@ export interface Client {
   /** Default lead time in days applied to all SKUs unless overridden */
   defaultLeadTimeDays: number;
   lastUpdated: string;
-  enabledMarketplaces: Marketplace[];
+  /** Canonical marketplace IDs (e.g. "amazon.co.uk") — see lib/marketplace-utils.ts */
+  enabledMarketplaces: string[];
 }
 
 export interface InventoryRow {
@@ -68,7 +59,8 @@ export interface InventoryRow {
   productName: string;
   asin: string;
   sku: string;
-  marketplace: Marketplace;
+  /** Canonical marketplace ID (e.g. "amazon.co.uk") — see lib/marketplace-utils.ts */
+  marketplace: string;
   /** Units currently available in FBA and ready to sell */
   fbaAvailable: number;
   /** Units inbound / en-route to FBA */

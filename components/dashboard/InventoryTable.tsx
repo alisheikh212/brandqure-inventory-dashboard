@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import type { InventoryRow, MarketplaceFilter } from "@/lib/mock-data";
 import { InventoryStatusBadge } from "@/components/ui/StatusBadge";
 import { stockoutInDays, getReorderStatus } from "@/lib/reorder";
+import { getMarketplaceLabel, rowMatchesMarketplace } from "@/lib/marketplace-utils";
 
 interface InventoryTableProps {
   rows: InventoryRow[];
@@ -65,10 +66,11 @@ export default function InventoryTable({
   const [sortBy, setSortBy] = useState<SortOption>("sku-az");
 
   const processed = useMemo(() => {
-    // 1. Marketplace filter (from parent prop)
+    // 1. Marketplace filter (from parent prop) — normalized comparison so
+    // casing/whitespace variants in the sheet never cause a false miss.
     let result = activeMarketplace === "All"
       ? rows
-      : rows.filter((r) => r.marketplace === activeMarketplace);
+      : rows.filter((r) => rowMatchesMarketplace(r, activeMarketplace));
 
     // 2. Search filter
     const q = search.trim().toLowerCase();
@@ -247,7 +249,7 @@ export default function InventoryTable({
                     {/* Marketplace */}
                     <td className="px-5 py-4">
                       <span className="px-2.5 py-1 rounded-full border border-outline-variant/30 bg-[#282828]/80 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">
-                        {row.marketplace}
+                        {getMarketplaceLabel(row.marketplace)}
                       </span>
                     </td>
 

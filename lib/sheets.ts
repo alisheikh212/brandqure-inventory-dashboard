@@ -1,9 +1,8 @@
 import 'server-only'
 import crypto from 'crypto'
 import { unstable_cache } from 'next/cache'
-import type { InventoryRow, Marketplace } from '@/lib/mock-data'
-import { normalizeMarketplace } from '@/lib/mock-data'
-import { deriveInventoryStatus } from '@/lib/reorder'
+import type { InventoryRow } from '@/lib/mock-data'
+import { parseSheetRows } from '@/lib/sheets-parser'
 import type { ClientConfig } from '@/lib/clients'
 
 function base64urlEncode(buf: Buffer): string {
@@ -63,7 +62,9 @@ async function fetchSheetRows(
   googleSheetId: string,
   accessToken: string,
 ): Promise<string[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${googleSheetId}/values/Inventory!A2:J`
+  // Fetch the header row (row 1) along with data so columns can be resolved
+  // by header text rather than trusting a hardcoded position.
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${googleSheetId}/values/Inventory!A1:J`
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: 'no-store',
@@ -77,74 +78,6 @@ async function fetchSheetRows(
 
   const json = await res.json() as { values?: string[][] }
   return json.values ?? []
-}
-
-// Canonical marketplace values after normalization.
-// Legacy values ("Amazon USA", "Amazon Canada") are accepted by normalizeMarketplace()
-// and converted to "Amazon.com" / "Amazon.ca" before this check.
-const VALID_MARKETPLACES = new Set<Marketplace>([
-  'Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart',
-])
-
-function parseSheetRows(
-  rows: string[][],
-  clientSlug: string,
-  defaultLeadTimeDays: number,
-): InventoryRow[] {
-  return rows
-    .filter((row) => {
-      // Skip empty rows and rows missing the three required identity fields:
-      // col A (SKU), col C (Product Name), col D (Marketplace).
-      // This catches wrong column order and partial header bleed-through.
-      const sku = row[0]?.trim()
-      const productName = row[2]?.trim()
-      const marketplace = row[3]?.trim()
-      return sku && productName && marketplace
-    })
-    .map((row) => {
-      const sku            = row[0]?.trim() ?? ''
-      const asin           = row[1]?.trim() ?? ''
-      const productName    = row[2]?.trim() ?? ''
-      const marketplaceRaw = row[3]?.trim() ?? ''
-      // Normalize handles both legacy ("Amazon USA") and current ("Amazon.com") values.
-      const normalized = normalizeMarketplace(marketplaceRaw)
-      const marketplace: Marketplace = VALID_MARKETPLACES.has(normalized)
-        ? normalized
-        : 'Amazon.com'
-      const fbaAvailable  = parseInt(row[4] ?? '0', 10) || 0
-      const inboundUnits  = parseInt(row[5] ?? '0', 10) || 0
-      const reservedUnits = parseInt(row[6] ?? '0', 10) || 0
-      const avgDailySales = parseFloat(row[7] ?? '0') || 0
-      const overrideRaw   = row[8]?.trim()
-      const leadTimeDays  = overrideRaw
-        ? (parseInt(overrideRaw, 10) || defaultLeadTimeDays)
-        : defaultLeadTimeDays
-      const lastUpdated   = row[9]?.trim() ?? ''
-
-      const base = {
-        id:              `${clientSlug}-${sku}-${marketplace}`,
-        clientSlug,
-        productName,
-        asin,
-        sku,
-        marketplace,
-        fbaAvailable,
-        inboundUnits,
-        reservedUnits,
-        avgDailySales,
-        leadTimeDays,
-        // 3PL data is not in the Google Sheet — Phase 3C will wire this via Supabase
-        threePlInventory: 0,
-        threePlLocation:  '',
-        lastUpdated,
-      }
-
-      return {
-        ...base,
-        // status is always computed by the app — never read from the sheet
-        status: deriveInventoryStatus({ ...base, status: 'Healthy' as const }),
-      } satisfies InventoryRow
-    })
 }
 
 // Cache parsed inventory per client for 5 minutes to stay within the

@@ -3,10 +3,11 @@
 import { useActionState, useCallback } from 'react'
 import { editClient, type ActionResult } from '@/app/actions/admin-clients'
 import type { ClientConfig } from '@/lib/clients'
+import { getAllMarketplaces, normalizeEnabledMarketplaces } from '@/lib/marketplace-utils'
 import Link from 'next/link'
 
 const TIERS = ['Enterprise', 'Pro', 'Basic'] as const
-const MARKETPLACES = ['Amazon.com', 'Amazon.ca', 'Amazon UK', 'Shopify', 'Walmart'] as const
+const MARKETPLACES = getAllMarketplaces()
 
 interface Props {
   client: ClientConfig
@@ -19,6 +20,8 @@ export default function EditClientForm({ client }: Props) {
   )
 
   const [state, action, isPending] = useActionState<ActionResult | null, FormData>(boundEditClient, null)
+
+  const enabledCanonical = normalizeEnabledMarketplaces(client.enabledMarketplaces)
 
   return (
     <form action={action} className="space-y-6 max-w-2xl">
@@ -117,14 +120,14 @@ export default function EditClientForm({ client }: Props) {
         <p className="font-label-md text-label-md text-on-surface-variant">Enabled Marketplaces</p>
         <div className="flex flex-wrap gap-4">
           {MARKETPLACES.map((m) => (
-            <label key={m} className="flex items-center gap-2 cursor-pointer select-none">
+            <label key={m.value} className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
-                name={`marketplace_${m}`}
-                defaultChecked={client.enabledMarketplaces.includes(m)}
+                name={`marketplace_${m.value}`}
+                defaultChecked={enabledCanonical.includes(m.value)}
                 className="w-4 h-4 accent-primary rounded"
               />
-              <span className="font-body-md text-body-md text-on-surface">{m}</span>
+              <span className="font-body-md text-body-md text-on-surface">{m.label}</span>
             </label>
           ))}
         </div>

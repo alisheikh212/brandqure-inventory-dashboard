@@ -13,6 +13,7 @@ import {
 import { InventoryStatusBadge } from "@/components/ui/StatusBadge";
 import PrintButton from "@/components/print/PrintButton";
 import { getPendingInboundOrders } from "@/app/actions/inbound-orders";
+import { getMarketplaceLabel } from "@/lib/marketplace-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -279,7 +280,7 @@ export default async function PrintReportPage({ params }: PageProps) {
                         {row.productName}
                       </td>
                       <td className="py-3 px-4 text-on-surface-variant text-sm">
-                        {row.marketplace}
+                        {getMarketplaceLabel(row.marketplace)}
                       </td>
                       <td
                         className={`py-3 px-4 text-right font-numeric-data text-sm ${

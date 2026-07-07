@@ -1,19 +1,25 @@
 import type { InventoryRow } from "@/lib/mock-data";
 import type { InboundOrder } from "@/lib/types";
 import { isActiveInboundOrder } from "@/lib/reorder";
+import { getMarketplaceLabel, normalizeMarketplaceId } from "@/lib/marketplace-utils";
 
 interface InboundSummaryProps {
   inventory: InventoryRow[];
   inboundOrders: InboundOrder[];
 }
 
+// Keyed by canonical marketplace ID (see lib/marketplace-utils.ts).
 const MARKETPLACE_COLORS: Record<string, string> = {
-  "Amazon.com": "bg-[#3d1000]/70 text-[#fb923c]",
-  "Amazon.ca":  "bg-[#0a2d0a]/70 text-[#4ade80]",
-  "Amazon UK":  "bg-[#0d1a3d]/70 text-[#93c5fd]",
-  "Shopify":    "bg-[#2d0a3d]/70 text-[#d8b4fe]",
-  "Walmart":    "bg-[#0a1e3d]/70 text-[#7dd3fc]",
+  "amazon.com":    "bg-[#3d1000]/70 text-[#fb923c]",
+  "amazon.ca":     "bg-[#0a2d0a]/70 text-[#4ade80]",
+  "amazon.co.uk":  "bg-[#0d1a3d]/70 text-[#93c5fd]",
+  "shopify":       "bg-[#2d0a3d]/70 text-[#d8b4fe]",
+  "walmart":       "bg-[#0a1e3d]/70 text-[#7dd3fc]",
 };
+
+function marketplacePillClass(rawMarketplace: string): string {
+  return MARKETPLACE_COLORS[normalizeMarketplaceId(rawMarketplace)] ?? "bg-surface-container text-on-surface-variant";
+}
 
 function daysFromToday(dateStr: string): number {
   const today = new Date();
@@ -83,7 +89,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                   const isToday = days === 0;
                   // Past arrival but within 10-day buffer = "In buffer period"
                   const isInBuffer = days < 0;
-                  const pillClass = MARKETPLACE_COLORS[order.marketplace] ?? "bg-surface-container text-on-surface-variant";
+                  const pillClass = marketplacePillClass(order.marketplace);
 
                   return (
                     <li key={order.id} className="px-5 py-3 flex flex-col gap-1">
@@ -116,7 +122,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-block px-2 py-0.5 rounded-full font-label-sm text-label-sm ${pillClass}`}>
-                          {order.marketplace}
+                          {getMarketplaceLabel(order.marketplace)}
                         </span>
                         <span className="font-numeric-data text-numeric-data text-primary">
                           {order.quantity.toLocaleString()} units
@@ -148,7 +154,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
               </div>
               <ul className="divide-y divide-outline-variant/15">
                 {expiredOrders.map((order) => {
-                  const pillClass = MARKETPLACE_COLORS[order.marketplace] ?? "bg-surface-container text-on-surface-variant";
+                  const pillClass = marketplacePillClass(order.marketplace);
                   return (
                     <li key={order.id} className="px-5 py-3 flex flex-col gap-1 opacity-60">
                       <div className="flex items-start justify-between gap-2">
@@ -167,7 +173,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-block px-2 py-0.5 rounded-full font-label-sm text-label-sm ${pillClass}`}>
-                          {order.marketplace}
+                          {getMarketplaceLabel(order.marketplace)}
                         </span>
                         <span className="font-numeric-data text-numeric-data text-on-surface-variant">
                           {order.quantity.toLocaleString()} units
@@ -196,9 +202,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
               </div>
               <ul className="divide-y divide-outline-variant/25">
                 {sheetInbound.map((row) => {
-                  const pillClass =
-                    MARKETPLACE_COLORS[row.marketplace] ??
-                    "bg-surface-container text-on-surface-variant";
+                  const pillClass = marketplacePillClass(row.marketplace);
                   return (
                     <li key={row.id} className="px-5 py-3 flex flex-col gap-1">
                       <p
@@ -209,7 +213,7 @@ export default function InboundSummary({ inventory, inboundOrders }: InboundSumm
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-block px-2 py-0.5 rounded-full font-label-sm text-label-sm ${pillClass}`}>
-                          {row.marketplace}
+                          {getMarketplaceLabel(row.marketplace)}
                         </span>
                         <span className="font-numeric-data text-numeric-data text-primary">
                           {row.inboundUnits.toLocaleString()} inbound
