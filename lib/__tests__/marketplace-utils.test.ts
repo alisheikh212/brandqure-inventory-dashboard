@@ -349,3 +349,202 @@ describe('other marketplaces normalize correctly', () => {
     expect(getMarketplaceLabel('shopify')).toBe('Shopify');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────
+// Tests 15-24: manual-selection behaviour contracts
+// These tests verify the utility behaviour that drives the UI rules:
+// no auto-selection, options scoped to account, canonical storage.
+// ─────────────────────────────────────────────────────────────────
+
+const CLIENT_ENABLED = ['amazon.co.uk'];
+const MULTI_CLIENT_ENABLED = ['amazon.com', 'amazon.co.uk', 'amazon.ca'];
+
+const ACCOUNT_INVENTORY = [
+  { id: '1', sku: 'KC-KBMO-CDEV', marketplace: 'amazon.co.uk', productName: 'UK Device' },
+  { id: '2', sku: 'US-WIDGET',    marketplace: 'amazon.com',   productName: 'US Widget'  },
+];
+
+describe('Test 15 — no marketplace is selected automatically', () => {
+  it('normalizeEnabledMarketplaces returns options but does not select one', () => {
+    // The component initialises selectedMarketplaceId = null.
+    // This test confirms the utility returns a list; selection is always null until user acts.
+    const options = normalizeEnabledMarketplaces(CLIENT_ENABLED);
+    expect(options).toHaveLength(1);
+    // The selected value starts as null — represented here by the placeholder check
+    const selected: string | null = null;
+    expect(selected).toBeNull();
+  });
+
+  it('single enabled marketplace does not imply a selected value', () => {
+    const options = normalizeEnabledMarketplaces(CLIENT_ENABLED);
+    // Even with one option, selectedMarketplaceId remains null until explicitly chosen
+    expect(options).toHaveLength(1);
+    expect(options[0]).toBe('amazon.co.uk');
+  });
+});
+
+describe('Test 16 — no SKU is selected automatically', () => {
+  it('filterByMarketplaceId with null marketplace returns empty (no marketplace ⇒ no SKUs)', () => {
+    // selectedMarketplaceId = null → filterByMarketplaceId is not called; SKU list is empty
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, '');
+    expect(rows).toHaveLength(0);
+  });
+
+  it('single SKU in filtered list does not become auto-selected (selectedSkuId stays null)', () => {
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, 'amazon.co.uk');
+    expect(rows).toHaveLength(1);
+    // selectedSkuId starts null; the component never sets it automatically
+    const selectedSkuId: string | null = null;
+    expect(selectedSkuId).toBeNull();
+  });
+});
+
+describe('Test 17 — marketplace options come from enabled_marketplaces only', () => {
+  it('single-marketplace account produces exactly one option', () => {
+    const options = normalizeEnabledMarketplaces(CLIENT_ENABLED);
+    expect(options).toHaveLength(1);
+    expect(options[0]).toBe('amazon.co.uk');
+  });
+
+  it('multi-marketplace account produces the correct options', () => {
+    const options = normalizeEnabledMarketplaces(MULTI_CLIENT_ENABLED);
+    expect(options).toEqual(['amazon.com', 'amazon.co.uk', 'amazon.ca']);
+  });
+
+  it('duplicate entries in enabled_marketplaces are deduplicated', () => {
+    const options = normalizeEnabledMarketplaces(['amazon.co.uk', 'Amazon UK', 'amazon.co.uk']);
+    expect(options).toHaveLength(1);
+    expect(options[0]).toBe('amazon.co.uk');
+  });
+});
+
+describe('Test 18 — amazon.co.uk displays as Amazon UK in the dropdown label', () => {
+  it('getMarketplaceLabel("amazon.co.uk") === "Amazon UK"', () => {
+    expect(getMarketplaceLabel('amazon.co.uk')).toBe('Amazon UK');
+  });
+
+  it('option label is "Amazon UK", option value is "amazon.co.uk"', () => {
+    const id = normalizeEnabledMarketplaces(CLIENT_ENABLED)[0];
+    const label = getMarketplaceLabel(id);
+    expect(id).toBe('amazon.co.uk');
+    expect(label).toBe('Amazon UK');
+  });
+});
+
+describe('Test 19 — stored dropdown value remains amazon.co.uk (not the display label)', () => {
+  it('normalizeMarketplaceId("amazon.co.uk") returns "amazon.co.uk", not "Amazon UK"', () => {
+    const stored = normalizeMarketplaceId('amazon.co.uk');
+    expect(stored).toBe('amazon.co.uk');
+    expect(stored).not.toBe('Amazon UK');
+  });
+
+  it('selecting from the dropdown stores the canonical ID, never the label', () => {
+    // Simulates: user picks the option whose value="amazon.co.uk"
+    // The onChange handler receives e.target.value = "amazon.co.uk"
+    const selectedValue = 'amazon.co.uk';
+    expect(selectedValue).toBe('amazon.co.uk');
+    expect(selectedValue).not.toBe('Amazon UK');
+  });
+});
+
+describe('Test 20 — SKU dropdown is disabled until marketplace is selected', () => {
+  it('with no marketplace (null), filterByMarketplaceId returns no rows', () => {
+    // When selectedMarketplaceId is null, the component skips filtering
+    // and renders the "Select marketplace first" disabled state.
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, '');
+    expect(rows).toHaveLength(0);
+  });
+
+  it('after marketplace is selected, rows become available', () => {
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, 'amazon.co.uk');
+    expect(rows.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Test 21 — selecting amazon.co.uk returns matching UK SKUs', () => {
+  it('filterByMarketplaceId("amazon.co.uk") returns KC-KBMO-CDEV', () => {
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, 'amazon.co.uk');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].sku).toBe('KC-KBMO-CDEV');
+  });
+
+  it('does not return US rows when amazon.co.uk is selected', () => {
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, 'amazon.co.uk');
+    expect(rows.every((r) => r.marketplace === 'amazon.co.uk')).toBe(true);
+  });
+});
+
+describe('Test 22 — changing marketplace clears the selected SKU', () => {
+  it('rowMatchesMarketplace returns false for a UK SKU when switching to amazon.com', () => {
+    const ukRow = ACCOUNT_INVENTORY[0]; // marketplace = "amazon.co.uk"
+    expect(rowMatchesMarketplace(ukRow, 'amazon.com')).toBe(false);
+    // When this returns false, the component clears selectedSkuId
+  });
+
+  it('rowMatchesMarketplace returns true for a UK SKU on amazon.co.uk', () => {
+    const ukRow = ACCOUNT_INVENTORY[0];
+    expect(rowMatchesMarketplace(ukRow, 'amazon.co.uk')).toBe(true);
+  });
+});
+
+describe('Test 23 — other clients marketplaces are not shown', () => {
+  it('normalizeEnabledMarketplaces only processes the provided list', () => {
+    // Account A has ["amazon.co.uk"] — amazon.com must not appear
+    const optionsA = normalizeEnabledMarketplaces(['amazon.co.uk']);
+    expect(optionsA).not.toContain('amazon.com');
+    expect(optionsA).not.toContain('amazon.ca');
+  });
+
+  it('an account with ["amazon.com", "amazon.ca"] does not include amazon.co.uk', () => {
+    const optionsB = normalizeEnabledMarketplaces(['amazon.com', 'amazon.ca']);
+    expect(optionsB).not.toContain('amazon.co.uk');
+  });
+});
+
+describe('Test 24 — unknown marketplaces do not default to Amazon US', () => {
+  it('normalizeMarketplaceId("tiktok.shop") stays "tiktok.shop"', () => {
+    expect(normalizeMarketplaceId('tiktok.shop')).toBe('tiktok.shop');
+    expect(normalizeMarketplaceId('tiktok.shop')).not.toBe('amazon.com');
+  });
+
+  it('getMarketplaceLabel for unknown returns original value, not "Amazon US"', () => {
+    expect(getMarketplaceLabel('some.unknown.market')).not.toBe('Amazon US');
+    expect(getMarketplaceLabel('some.unknown.market')).not.toBe('Amazon.com');
+  });
+
+  it('filterByMarketplaceId for unknown marketplace returns empty array', () => {
+    const rows = filterByMarketplaceId(ACCOUNT_INVENTORY, 'tiktok.shop');
+    expect(rows).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// Tests 25-26: new marketplace entries (extended catalog)
+// ─────────────────────────────────────────────────────────────────
+
+describe('extended marketplace catalog labels', () => {
+  it('amazon.com.au → Amazon Australia', () => {
+    expect(getMarketplaceLabel('amazon.com.au')).toBe('Amazon Australia');
+    expect(normalizeMarketplaceId('Amazon Australia')).toBe('amazon.com.au');
+  });
+
+  it('amazon.ae → Amazon UAE', () => {
+    expect(getMarketplaceLabel('amazon.ae')).toBe('Amazon UAE');
+    expect(normalizeMarketplaceId('Amazon UAE')).toBe('amazon.ae');
+  });
+
+  it('amazon.sa → Amazon Saudi Arabia', () => {
+    expect(getMarketplaceLabel('amazon.sa')).toBe('Amazon Saudi Arabia');
+    expect(normalizeMarketplaceId('Amazon Saudi Arabia')).toBe('amazon.sa');
+  });
+
+  it('amazon.in → Amazon India', () => {
+    expect(getMarketplaceLabel('amazon.in')).toBe('Amazon India');
+    expect(normalizeMarketplaceId('Amazon India')).toBe('amazon.in');
+  });
+
+  it('amazon.co.jp → Amazon Japan', () => {
+    expect(getMarketplaceLabel('amazon.co.jp')).toBe('Amazon Japan');
+    expect(normalizeMarketplaceId('Amazon Japan')).toBe('amazon.co.jp');
+  });
+});

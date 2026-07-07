@@ -312,34 +312,31 @@ export default function HistoricForecastClient({
   defaultLeadTimeDays,
   enabledMarketplaces,
 }: Props) {
-  // ── Marketplace list (normalised, deduped) ────────────────────
-  const marketplaceIds = useMemo(
-    () => normalizeEnabledMarketplaces(enabledMarketplaces),
-    [enabledMarketplaces],
-  );
+  // ── Marketplace options (normalised, deduped) ─────────────────
+  // Each option carries value (canonical ID) and label (display string).
+  // Built once from the client's enabled_marketplaces — never from a global list.
+  const marketplaceOptions = useMemo(() => {
+    const ids = normalizeEnabledMarketplaces(enabledMarketplaces);
+    return ids.map((id) => ({ value: id, label: getMarketplaceLabel(id) }));
+  }, [enabledMarketplaces]);
 
-  // Auto-select when only one marketplace is configured
-  const autoMarketplaceId =
-    marketplaceIds.length === 1 ? marketplaceIds[0] : null;
-
-  // ── Step 1a: Marketplace selection ───────────────────────────
-  // userMarketplaceId holds an explicit user choice; null = not yet chosen.
-  // Effective marketplace = user choice ?? auto-selected single
-  const [userMarketplaceId, setUserMarketplaceId] = useState<string | null>(null);
-  const selectedMarketplaceId = userMarketplaceId ?? autoMarketplaceId;
-
-  // Inventory filtered to selected marketplace
-  const marketplaceRows = useMemo(() => {
-    if (!selectedMarketplaceId) return [] as InventoryRow[];
-    return filterByMarketplaceId(inventory, selectedMarketplaceId);
-  }, [inventory, selectedMarketplaceId]);
+  // ── Step 1a: Marketplace — always requires manual selection ───
+  // selectedMarketplaceId is null until the user explicitly picks one.
+  // It is never auto-populated, even when only one option exists.
+  const [selectedMarketplaceId, setSelectedMarketplaceId] = useState<string | null>(null);
 
   const marketplaceLabel = selectedMarketplaceId
     ? getMarketplaceLabel(selectedMarketplaceId)
     : "";
 
+  // Inventory rows matching the selected marketplace (canonical comparison on both sides)
+  const marketplaceRows = useMemo(() => {
+    if (!selectedMarketplaceId) return [] as InventoryRow[];
+    return filterByMarketplaceId(inventory, selectedMarketplaceId);
+  }, [inventory, selectedMarketplaceId]);
+
   function handleMarketplaceChange(newId: string) {
-    setUserMarketplaceId(newId);
+    setSelectedMarketplaceId(newId || null);
     // Clear SKU if it belongs to a different marketplace
     if (selectedSkuId) {
       const currentRow = inventory.find((r) => r.id === selectedSkuId);
@@ -349,23 +346,22 @@ export default function HistoricForecastClient({
         setLeadTimeDays(defaultLeadTimeDays);
       }
     }
-    // Reset calculation
-    resetCalculation();
+    // Reset calculation — CSV can be reused, deductions reset with new SKU
+    setPeriods([]);
+    setFileName(null);
+    setCsvError(null);
+    setSelectedLabels(new Set());
   }
 
-  // ── Step 1b: SKU selection ────────────────────────────────────
+  // ── Step 1b: SKU — always requires manual selection ──────────
+  // selectedSkuId is null until the user explicitly picks one.
+  // No auto-selection even when only one SKU is available for the marketplace.
+  const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
   const [skuSearch, setSkuSearch] = useState("");
   const [skuDropdownOpen, setSkuDropdownOpen] = useState(false);
-  const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
   const skuInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-select when only one SKU in the filtered list and user hasn't chosen yet
-  const autoSkuId =
-    selectedSkuId === null && marketplaceRows.length === 1
-      ? marketplaceRows[0].id
-      : null;
-  const effectiveSkuId = selectedSkuId ?? autoSkuId;
-  const selectedRow = inventory.find((r) => r.id === effectiveSkuId) ?? null;
+  const selectedRow = inventory.find((r) => r.id === selectedSkuId) ?? null;
 
   const filteredSkus = useMemo(() => {
     const q = skuSearch.toLowerCase().trim();
@@ -386,17 +382,8 @@ export default function HistoricForecastClient({
     setLeadTimeDays(row.leadTimeDays > 0 ? row.leadTimeDays : defaultLeadTimeDays);
   }
 
-  // Display value for the SKU input when closed (shows selected/auto-selected SKU)
-  const skuInputDisplay =
-    !skuDropdownOpen && selectedRow ? selectedRow.sku : skuSearch;
-
-  // ── Shared reset helper ───────────────────────────────────────
-  function resetCalculation() {
-    setPeriods([]);
-    setFileName(null);
-    setCsvError(null);
-    setSelectedLabels(new Set());
-  }
+  // Show the selected SKU's identifier in the input when dropdown is closed
+  const skuInputDisplay = !skuDropdownOpen && selectedRow ? selectedRow.sku : skuSearch;
 
   // ── Step 2: CSV upload ────────────────────────────────────────
   const [dragging, setDragging] = useState(false);
@@ -405,7 +392,7 @@ export default function HistoricForecastClient({
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Declared before processFile to avoid lint "used before declared" error
+  // Declared before processFile — referenced inside the reader callback
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
 
   function processFile(file: File) {
@@ -520,7 +507,7 @@ export default function HistoricForecastClient({
       })
     : null;
 
-  // ── CSV Export ────────────────────────────────────────────────
+  // ── CSV export ────────────────────────────────────────────────
   function handleExport() {
     if (!result || !selectedRow) return;
     const oldest = [...selectedPeriods].sort((a, b) => a.sortKey - b.sortKey)[0];
@@ -562,172 +549,159 @@ export default function HistoricForecastClient({
       {/* ── Step 1: Select Marketplace & SKU ── */}
       <Section step={1} title="Select Marketplace &amp; SKU" icon="inventory_2">
 
-        {/* No marketplaces configured */}
-        {marketplaceIds.length === 0 && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-error/10 border border-error/30">
-            <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">
-              error
-            </span>
-            <p className="font-body-sm text-body-sm text-error">
-              No enabled marketplaces are configured for this client. Contact
-              your administrator to update the client settings.
-            </p>
-          </div>
-        )}
+        {/* ── 1a: Marketplace dropdown ── */}
+        <div className="mb-6">
+          <label
+            htmlFor="marketplace-select"
+            className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5"
+          >
+            Marketplace
+          </label>
 
-        {/* ── 1a: Marketplace selector ── */}
-        {marketplaceIds.length > 0 && (
-          <div className="mb-5">
-            <label className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5">
-              Marketplace
-            </label>
-
-            {marketplaceIds.length === 1 ? (
-              /* Single marketplace: auto-selected, display-only */
-              <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#1d1d1d]/40 border border-white/[0.07] rounded-xl max-w-xs">
-                <span className="material-symbols-outlined text-[16px] text-secondary-container">
-                  check_circle
-                </span>
-                <span className="font-label-md text-label-md text-on-surface">
-                  {getMarketplaceLabel(marketplaceIds[0])}
-                </span>
-                <span className="ml-auto font-label-sm text-label-sm text-on-surface-variant/50">
-                  Auto-selected
-                </span>
-              </div>
-            ) : (
-              /* Multiple marketplaces: require user selection */
+          {marketplaceOptions.length === 0 ? (
+            /* No marketplaces configured for this account */
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-error/10 border border-error/30 max-w-sm">
+              <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">
+                error
+              </span>
+              <p className="font-body-sm text-body-sm text-error">
+                No marketplaces are enabled for this account. Contact your
+                administrator to update the account settings.
+              </p>
+            </div>
+          ) : (
+            <>
               <select
+                id="marketplace-select"
                 value={selectedMarketplaceId ?? ""}
                 onChange={(e) => handleMarketplaceChange(e.target.value)}
                 className="w-full max-w-xs px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl font-body-md text-body-md text-on-surface outline-none focus:border-secondary-container/40 focus:ring-2 focus:ring-secondary-container/10 transition-all appearance-none cursor-pointer"
               >
                 <option value="" disabled>
-                  Select a marketplace…
+                  Select marketplace
                 </option>
-                {marketplaceIds.map((id) => (
-                  <option key={id} value={id}>
-                    {getMarketplaceLabel(id)}
+                {marketplaceOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
-            )}
-          </div>
-        )}
-
-        {/* ── 1b: SKU selector (only after marketplace resolved) ── */}
-        {selectedMarketplaceId && (
-          <>
-            <label className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5">
-              SKU
-            </label>
-
-            {marketplaceRows.length === 0 ? (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#1d1d1d]/60 border border-white/[0.07]">
-                <span className="material-symbols-outlined text-[18px] text-outline flex-shrink-0 mt-0.5">
-                  info
-                </span>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  No SKUs found for{" "}
-                  <strong className="text-on-surface">{marketplaceLabel}</strong>
-                  . Check that the Google Sheet contains rows with this
-                  marketplace.
+              {!selectedMarketplaceId && (
+                <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-1.5">
+                  Select a marketplace to continue.
                 </p>
-              </div>
-            ) : autoSkuId ? (
-              /* Single SKU: auto-selected */
-              <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#1d1d1d]/40 border border-white/[0.07] rounded-xl max-w-xl">
-                <span className="material-symbols-outlined text-[16px] text-secondary-container">
-                  check_circle
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-label-md text-label-md text-on-surface truncate">
-                    {marketplaceRows[0].sku}
-                  </p>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
-                    {marketplaceRows[0].productName}
-                  </p>
-                </div>
-                <span className="ml-auto font-label-sm text-label-sm text-on-surface-variant/50 flex-shrink-0">
-                  Auto-selected
-                </span>
-              </div>
-            ) : (
-              /* Multiple SKUs: searchable dropdown */
-              <div className="relative max-w-xl">
-                <div
-                  className="flex items-center gap-2 px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl focus-within:border-secondary-container/40 focus-within:ring-2 focus-within:ring-secondary-container/10 transition-all cursor-text"
-                  onClick={() => {
-                    setSkuDropdownOpen(true);
-                    skuInputRef.current?.focus();
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant flex-shrink-0">
-                    search
-                  </span>
-                  <input
-                    ref={skuInputRef}
-                    type="text"
-                    placeholder="Search SKU or product name…"
-                    value={skuInputDisplay}
-                    onChange={(e) => {
-                      setSkuSearch(e.target.value);
-                      setSkuDropdownOpen(true);
-                      if (selectedSkuId) setSelectedSkuId(null);
-                    }}
-                    onFocus={() => {
-                      setSkuSearch("");
-                      setSkuDropdownOpen(true);
-                    }}
-                    onBlur={() =>
-                      setTimeout(() => setSkuDropdownOpen(false), 150)
-                    }
-                    className="flex-1 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none min-w-0"
-                  />
-                  {effectiveSkuId && (
-                    <span className="material-symbols-outlined text-[18px] text-secondary-container flex-shrink-0">
-                      check_circle
-                    </span>
-                  )}
-                </div>
+              )}
+            </>
+          )}
+        </div>
 
-                {skuDropdownOpen && filteredSkus.length > 0 && (
-                  <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl overflow-hidden max-h-[280px] overflow-y-auto">
-                    {filteredSkus.map((row) => (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-white/[0.06] transition-colors"
-                          onMouseDown={() => selectSku(row)}
-                        >
-                          <div className="min-w-0">
-                            <p className="font-label-md text-label-md text-on-surface truncate">
-                              {row.sku}
-                            </p>
-                            <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
-                              {row.productName}
-                            </p>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+        {/* ── 1b: SKU selector ── */}
+        <div>
+          <label className="font-label-sm text-label-sm text-on-surface-variant block mb-1.5">
+            SKU
+          </label>
+
+          {!selectedMarketplaceId ? (
+            /* No marketplace chosen yet — disabled state */
+            <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[#1d1d1d]/30 border border-white/[0.05] rounded-xl max-w-xl opacity-50 cursor-not-allowed">
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40 flex-shrink-0">
+                search
+              </span>
+              <span className="font-body-md text-body-md text-on-surface-variant/40">
+                Select marketplace first
+              </span>
+            </div>
+          ) : marketplaceRows.length === 0 ? (
+            /* Marketplace selected but no matching inventory rows */
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-[#1d1d1d]/60 border border-white/[0.09] max-w-xl">
+              <span className="material-symbols-outlined text-[18px] text-outline flex-shrink-0 mt-0.5">
+                info
+              </span>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                No SKUs were found for this marketplace. Check that the
+                inventory sheet marketplace values match the account
+                configuration.
+              </p>
+            </div>
+          ) : (
+            /* Marketplace selected and rows available — require manual selection */
+            <div className="relative max-w-xl">
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 bg-[#1d1d1d]/80 border border-white/[0.09] rounded-xl focus-within:border-secondary-container/40 focus-within:ring-2 focus-within:ring-secondary-container/10 transition-all cursor-text"
+                onClick={() => {
+                  setSkuDropdownOpen(true);
+                  skuInputRef.current?.focus();
+                }}
+              >
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant flex-shrink-0">
+                  search
+                </span>
+                <input
+                  ref={skuInputRef}
+                  type="text"
+                  placeholder="Select SKU"
+                  value={skuInputDisplay}
+                  onChange={(e) => {
+                    setSkuSearch(e.target.value);
+                    setSkuDropdownOpen(true);
+                    if (selectedSkuId) setSelectedSkuId(null);
+                  }}
+                  onFocus={() => {
+                    setSkuSearch("");
+                    setSkuDropdownOpen(true);
+                  }}
+                  onBlur={() => setTimeout(() => setSkuDropdownOpen(false), 150)}
+                  className="flex-1 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none min-w-0"
+                />
+                {selectedSkuId && (
+                  <span className="material-symbols-outlined text-[18px] text-secondary-container flex-shrink-0">
+                    check_circle
+                  </span>
+                )}
+              </div>
+
+              {skuDropdownOpen && filteredSkus.length > 0 && (
+                <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl overflow-hidden max-h-[280px] overflow-y-auto">
+                  {filteredSkus.map((row) => (
+                    <li key={row.id}>
+                      <button
+                        type="button"
+                        className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-white/[0.06] transition-colors"
+                        onMouseDown={() => selectSku(row)}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-label-md text-label-md text-on-surface truncate">
+                            {row.sku}
+                          </p>
+                          <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
+                            {row.productName}
+                          </p>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {skuDropdownOpen &&
+                filteredSkus.length === 0 &&
+                skuSearch.trim() !== "" && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl p-4">
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">
+                      No SKUs match &ldquo;{skuSearch}&rdquo; in{" "}
+                      {marketplaceLabel}.
+                    </p>
+                  </div>
                 )}
 
-                {skuDropdownOpen &&
-                  filteredSkus.length === 0 &&
-                  skuSearch.trim() !== "" && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#1d1d1d] border border-white/[0.09] rounded-xl shadow-xl p-4">
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        No SKUs match &ldquo;{skuSearch}&rdquo; in{" "}
-                        {marketplaceLabel}.
-                      </p>
-                    </div>
-                  )}
-              </div>
-            )}
-          </>
-        )}
+              {!selectedSkuId && (
+                <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-1.5">
+                  Select a SKU to continue.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Selected SKU info cards */}
         {selectedRow && (
@@ -1001,9 +975,7 @@ export default function HistoricForecastClient({
               min={0}
               max={200}
               value={cushionPct}
-              onChange={(e) =>
-                setCushionPct(parseFloat(e.target.value) || 0)
-              }
+              onChange={(e) => setCushionPct(parseFloat(e.target.value) || 0)}
               className={`w-full px-3 py-2.5 bg-[#1d1d1d]/80 border rounded-xl font-body-md text-body-md text-on-surface outline-none focus:ring-2 transition-all ${
                 cushionValid
                   ? "border-white/[0.09] focus:border-secondary-container/40 focus:ring-secondary-container/10"
@@ -1136,7 +1108,7 @@ export default function HistoricForecastClient({
         </div>
       )}
 
-      {/* Not ready callout */}
+      {/* Pending callout — show when SKU is chosen but not ready to compute */}
       {!canCompute && selectedRow && periods.length > 0 && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-white/[0.07] bg-[#1d1d1d]/40">
           <span className="material-symbols-outlined text-[20px] text-outline">

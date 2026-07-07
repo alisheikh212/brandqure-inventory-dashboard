@@ -18,15 +18,20 @@ interface MarketplaceEntry {
 }
 
 const CATALOG: MarketplaceEntry[] = [
-  { id: "amazon.com",   label: "Amazon US",      inventoryValue: "Amazon.com" },
-  { id: "amazon.co.uk", label: "Amazon UK",       inventoryValue: "Amazon UK"  },
-  { id: "amazon.ca",    label: "Amazon Canada",   inventoryValue: "Amazon.ca"  },
-  { id: "amazon.de",    label: "Amazon Germany",  inventoryValue: "Amazon UK"  },
-  { id: "amazon.fr",    label: "Amazon France",   inventoryValue: "Amazon UK"  },
-  { id: "amazon.it",    label: "Amazon Italy",    inventoryValue: "Amazon UK"  },
-  { id: "amazon.es",    label: "Amazon Spain",    inventoryValue: "Amazon UK"  },
-  { id: "shopify",      label: "Shopify",         inventoryValue: "Shopify"    },
-  { id: "walmart",      label: "Walmart",         inventoryValue: "Walmart"    },
+  { id: "amazon.com",      label: "Amazon US",                     inventoryValue: "Amazon.com"    },
+  { id: "amazon.co.uk",    label: "Amazon UK",                     inventoryValue: "Amazon UK"     },
+  { id: "amazon.ca",       label: "Amazon Canada",                 inventoryValue: "Amazon.ca"     },
+  { id: "amazon.de",       label: "Amazon Germany",                inventoryValue: "Amazon Germany" },
+  { id: "amazon.fr",       label: "Amazon France",                 inventoryValue: "Amazon France"  },
+  { id: "amazon.it",       label: "Amazon Italy",                  inventoryValue: "Amazon Italy"   },
+  { id: "amazon.es",       label: "Amazon Spain",                  inventoryValue: "Amazon Spain"   },
+  { id: "amazon.com.au",   label: "Amazon Australia",              inventoryValue: "Amazon Australia" },
+  { id: "amazon.ae",       label: "Amazon UAE",                    inventoryValue: "Amazon UAE"     },
+  { id: "amazon.sa",       label: "Amazon Saudi Arabia",           inventoryValue: "Amazon Saudi Arabia" },
+  { id: "amazon.in",       label: "Amazon India",                  inventoryValue: "Amazon India"   },
+  { id: "amazon.co.jp",    label: "Amazon Japan",                  inventoryValue: "Amazon Japan"   },
+  { id: "shopify",         label: "Shopify",                       inventoryValue: "Shopify"        },
+  { id: "walmart",         label: "Walmart",                       inventoryValue: "Walmart"        },
 ];
 
 // All explicit aliases: any recognised variant → canonical ID.
@@ -72,6 +77,32 @@ const ALIASES: Record<string, string> = {
   "amazon.es":        "amazon.es",
   "Amazon Spain":     "amazon.es",
   "Amazon ES":        "amazon.es",
+  // ── AU ──────────────────────────────────────────────────────────
+  "amazon.com.au":    "amazon.com.au",
+  "Amazon Australia": "amazon.com.au",
+  "Amazon AU":        "amazon.com.au",
+  "amazon australia": "amazon.com.au",
+  "AU":               "amazon.com.au",
+  // ── AE ──────────────────────────────────────────────────────────
+  "amazon.ae":        "amazon.ae",
+  "Amazon UAE":       "amazon.ae",
+  "Amazon AE":        "amazon.ae",
+  "AE":               "amazon.ae",
+  // ── SA ──────────────────────────────────────────────────────────
+  "amazon.sa":        "amazon.sa",
+  "Amazon Saudi Arabia": "amazon.sa",
+  "Amazon SA":        "amazon.sa",
+  "SA":               "amazon.sa",
+  // ── IN ──────────────────────────────────────────────────────────
+  "amazon.in":        "amazon.in",
+  "Amazon India":     "amazon.in",
+  "Amazon IN":        "amazon.in",
+  "IN":               "amazon.in",
+  // ── JP ──────────────────────────────────────────────────────────
+  "amazon.co.jp":     "amazon.co.jp",
+  "Amazon Japan":     "amazon.co.jp",
+  "Amazon JP":        "amazon.co.jp",
+  "JP":               "amazon.co.jp",
   // ── Shopify ─────────────────────────────────────────────────────
   "shopify":          "shopify",
   "Shopify":          "shopify",
